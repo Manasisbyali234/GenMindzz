@@ -12,11 +12,16 @@ class ProfileScreen extends ConsumerWidget {
     final user = ref.watch(authProvider).user;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Profile')),
-      body: Padding(
+      backgroundColor: AppColors.background,
+      appBar: AppBar(
+        title: const Text('Profile'),
+        backgroundColor: AppColors.primary,
+      ),
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
+            const SizedBox(height: 20),
             _buildUserInfo(user?.name ?? 'User', user?.email ?? '', user?.role.name ?? ''),
             const SizedBox(height: 32),
             _buildMenuItems(context, ref),
@@ -27,54 +32,83 @@ class ProfileScreen extends ConsumerWidget {
   }
 
   Widget _buildUserInfo(String name, String email, String role) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          children: [
-            CircleAvatar(
-              radius: 40,
-              backgroundColor: AppColors.primary.withOpacity(0.1),
-              child: Text(
-                name.isNotEmpty ? name[0].toUpperCase() : 'U',
-                style: const TextStyle(
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.primary,
-                ),
+    final isSecurityUser = role.toLowerCase() == 'security';
+    
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: AppColors.cardBackground,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Container(
+            width: 80,
+            height: 80,
+            decoration: BoxDecoration(
+              gradient: isSecurityUser ? AppColors.primaryGradient : AppColors.accentGradient,
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Icon(
+              isSecurityUser ? Icons.shield : Icons.person,
+              size: 40,
+              color: AppColors.textLight,
+            ),
+          ),
+          const SizedBox(height: 20),
+          Text(
+            isSecurityUser ? 'Officer $name' : name,
+            style: const TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 8),
+          if (isSecurityUser) ...[
+            const Text(
+              'Officer ID: SEC001',
+              style: TextStyle(
+                color: AppColors.textSecondary,
+                fontSize: 16,
               ),
             ),
-            const SizedBox(height: 16),
-            Text(
-              name,
-              style: const TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 12),
+          ] else ...[
             Text(
               email,
-              style: const TextStyle(color: AppColors.textSecondary),
-            ),
-            const SizedBox(height: 8),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: AppColors.primary.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Text(
-                role.toUpperCase(),
-                style: const TextStyle(
-                  color: AppColors.primary,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 12,
-                ),
+              style: const TextStyle(
+                color: AppColors.textSecondary,
+                fontSize: 16,
               ),
             ),
+            const SizedBox(height: 12),
           ],
-        ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
+              color: AppColors.approved.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Text(
+              isSecurityUser ? 'ACTIVE DUTY' : role.toUpperCase(),
+              style: const TextStyle(
+                color: AppColors.approved,
+                fontWeight: FontWeight.bold,
+                fontSize: 12,
+                letterSpacing: 0.5,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -83,14 +117,9 @@ class ProfileScreen extends ConsumerWidget {
     return Column(
       children: [
         _buildMenuItem(
-          icon: Icons.info_outline,
-          title: 'App Info',
+          icon: Icons.settings,
+          title: 'App Settings',
           onTap: () => _showAppInfo(context),
-        ),
-        _buildMenuItem(
-          icon: Icons.support_agent,
-          title: 'Support',
-          onTap: () => _showSupport(context),
         ),
         _buildMenuItem(
           icon: Icons.logout,
@@ -108,20 +137,48 @@ class ProfileScreen extends ConsumerWidget {
     required VoidCallback onTap,
     bool isDestructive = false,
   }) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 8),
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: AppColors.cardBackground,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
       child: ListTile(
-        leading: Icon(
-          icon,
-          color: isDestructive ? AppColors.overstay : AppColors.textSecondary,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+        leading: Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: isDestructive 
+                ? AppColors.rejected.withOpacity(0.1)
+                : AppColors.primary.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Icon(
+            icon,
+            color: isDestructive ? AppColors.rejected : AppColors.primary,
+            size: 20,
+          ),
         ),
         title: Text(
           title,
           style: TextStyle(
-            color: isDestructive ? AppColors.overstay : AppColors.textPrimary,
+            color: isDestructive ? AppColors.rejected : AppColors.textPrimary,
+            fontWeight: FontWeight.w600,
+            fontSize: 16,
           ),
         ),
-        trailing: const Icon(Icons.chevron_right),
+        trailing: Icon(
+          Icons.chevron_right,
+          color: AppColors.textSecondary,
+        ),
         onTap: onTap,
       ),
     );

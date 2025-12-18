@@ -31,8 +31,13 @@ class _VisitorsScreenState extends ConsumerState<VisitorsScreen>
     return Scaffold(
       appBar: AppBar(
         title: const Text('Visitors'),
+        backgroundColor: AppColors.primary,
+        foregroundColor: AppColors.textLight,
         bottom: TabBar(
           controller: _tabController,
+          labelColor: AppColors.textLight,
+          unselectedLabelColor: AppColors.textLight.withOpacity(0.7),
+          indicatorColor: AppColors.textLight,
           tabs: const [
             Tab(text: "Today's Visitors"),
             Tab(text: 'All Visitors'),

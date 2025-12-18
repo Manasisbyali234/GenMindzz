@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/constants/app_colors.dart';
 
 
 class InviteVisitorModal extends StatefulWidget {
@@ -30,8 +31,8 @@ class _InviteVisitorModalState extends State<InviteVisitorModal> {
         builder: (context, scrollController) {
           return Container(
             decoration: const BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+              color: AppColors.cardBackground,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
             ),
             child: Column(
               children: [
@@ -45,14 +46,16 @@ class _InviteVisitorModalState extends State<InviteVisitorModal> {
                       child: Column(
                         children: [
                           _buildNameField(),
-                          const SizedBox(height: 16),
+                          const SizedBox(height: 20),
                           _buildEmailField(),
-                          const SizedBox(height: 16),
+                          const SizedBox(height: 20),
                           _buildPhoneField(),
-                          const SizedBox(height: 16),
-                          _buildPurposeField(),
-                          const SizedBox(height: 16),
+                          const SizedBox(height: 20),
                           _buildDateTimePickers(),
+                          const SizedBox(height: 20),
+                          _buildCompanyField(),
+                          const SizedBox(height: 20),
+                          _buildPurposeField(),
                           const SizedBox(height: 32),
                           _buildActionButtons(),
                         ],
@@ -70,20 +73,49 @@ class _InviteVisitorModalState extends State<InviteVisitorModal> {
 
   Widget _buildHeader() {
     return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: const BoxDecoration(
-        border: Border(bottom: BorderSide(color: Colors.grey, width: 0.5)),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        border: Border(
+          bottom: BorderSide(color: Colors.grey.shade200, width: 1),
+        ),
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      child: Column(
         children: [
-          const Text(
-            'Invite Visitor',
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          // Handle bar
+          Container(
+            width: 40,
+            height: 4,
+            decoration: BoxDecoration(
+              color: Colors.grey.shade300,
+              borderRadius: BorderRadius.circular(2),
+            ),
           ),
-          IconButton(
-            onPressed: () => Navigator.pop(context),
-            icon: const Icon(Icons.close),
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Invite Visitor',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade100,
+                  borderRadius: BorderRadius.circular(18),
+                ),
+                child: IconButton(
+                  onPressed: () => Navigator.pop(context),
+                  icon: const Icon(Icons.close, size: 20),
+                  padding: EdgeInsets.zero,
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -91,100 +123,136 @@ class _InviteVisitorModalState extends State<InviteVisitorModal> {
   }
 
   Widget _buildNameField() {
-    return TextFormField(
-      controller: _nameController,
-      decoration: const InputDecoration(
-        labelText: 'Visitor Name *',
-        prefixIcon: Icon(Icons.person),
-      ),
-      validator: (value) {
-        if (value?.isEmpty ?? true) return 'Name is required';
-        return null;
-      },
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Visitor Name *',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: AppColors.textPrimary,
+          ),
+        ),
+        const SizedBox(height: 8),
+        TextFormField(
+          controller: _nameController,
+          decoration: InputDecoration(
+            hintText: 'Enter visitor name',
+            prefixIcon: const Icon(Icons.person, color: AppColors.textSecondary),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.grey.shade300),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: AppColors.primary, width: 2),
+            ),
+          ),
+          validator: (value) {
+            if (value?.isEmpty ?? true) return 'Name is required';
+            return null;
+          },
+        ),
+      ],
     );
   }
 
   Widget _buildEmailField() {
-    return TextFormField(
-      controller: _emailController,
-      decoration: const InputDecoration(
-        labelText: 'Email *',
-        prefixIcon: Icon(Icons.email),
-      ),
-      keyboardType: TextInputType.emailAddress,
-      validator: (value) {
-        if (value?.isEmpty ?? true) return 'Email is required';
-        if (!value!.contains('@')) return 'Invalid email';
-        return null;
-      },
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Email *',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: AppColors.textPrimary,
+          ),
+        ),
+        const SizedBox(height: 8),
+        TextFormField(
+          controller: _emailController,
+          decoration: InputDecoration(
+            hintText: 'Enter email address',
+            prefixIcon: const Icon(Icons.email, color: AppColors.textSecondary),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.grey.shade300),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: AppColors.primary, width: 2),
+            ),
+          ),
+          keyboardType: TextInputType.emailAddress,
+          validator: (value) {
+            if (value?.isEmpty ?? true) return 'Email is required';
+            if (!value!.contains('@')) return 'Invalid email';
+            return null;
+          },
+        ),
+      ],
     );
   }
 
   Widget _buildPhoneField() {
-    return TextFormField(
-      controller: _phoneController,
-      decoration: const InputDecoration(
-        labelText: 'Phone Number',
-        prefixIcon: Icon(Icons.phone),
-      ),
-      keyboardType: TextInputType.phone,
-    );
-  }
-
-  Widget _buildPurposeField() {
-    return TextFormField(
-      controller: _purposeController,
-      decoration: const InputDecoration(
-        labelText: 'Visit Purpose *',
-        prefixIcon: Icon(Icons.business),
-      ),
-      maxLines: 2,
-      validator: (value) {
-        if (value?.isEmpty ?? true) return 'Purpose is required';
-        return null;
-      },
-    );
-  }
-
-  Widget _buildDateTimePickers() {
-    return Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Expanded(
-          child: InkWell(
-            onTap: _selectDate,
-            child: InputDecorator(
-              decoration: const InputDecoration(
-                labelText: 'Date *',
-                prefixIcon: Icon(Icons.calendar_today),
-              ),
-              child: Text(
-                _selectedDate != null
-                    ? '${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}'
-                    : 'Select date',
-                style: TextStyle(
-                  color: _selectedDate != null ? Colors.black : Colors.grey,
-                ),
-              ),
-            ),
+        const Text(
+          'Phone Number',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: AppColors.textPrimary,
           ),
         ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: InkWell(
-            onTap: _selectTime,
-            child: InputDecorator(
-              decoration: const InputDecoration(
-                labelText: 'Time *',
-                prefixIcon: Icon(Icons.access_time),
-              ),
-              child: Text(
-                _selectedTime != null
-                    ? _selectedTime!.format(context)
-                    : 'Select time',
-                style: TextStyle(
-                  color: _selectedTime != null ? Colors.black : Colors.grey,
-                ),
-              ),
+        const SizedBox(height: 8),
+        TextFormField(
+          controller: _phoneController,
+          decoration: InputDecoration(
+            hintText: 'Enter phone number',
+            prefixIcon: const Icon(Icons.phone, color: AppColors.textSecondary),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.grey.shade300),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: AppColors.primary, width: 2),
+            ),
+          ),
+          keyboardType: TextInputType.phone,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCompanyField() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Company (Optional)',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: AppColors.textPrimary,
+          ),
+        ),
+        const SizedBox(height: 8),
+        TextFormField(
+          decoration: InputDecoration(
+            hintText: 'Enter company name',
+            prefixIcon: const Icon(Icons.business, color: AppColors.textSecondary),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.grey.shade300),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: AppColors.primary, width: 2),
             ),
           ),
         ),
@@ -192,20 +260,163 @@ class _InviteVisitorModalState extends State<InviteVisitorModal> {
     );
   }
 
-  Widget _buildActionButtons() {
-    return Row(
+  Widget _buildPurposeField() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Expanded(
-          child: OutlinedButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+        const Text(
+          'Purpose *',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: AppColors.textPrimary,
           ),
         ),
-        const SizedBox(width: 16),
-        Expanded(
+        const SizedBox(height: 8),
+        TextFormField(
+          controller: _purposeController,
+          decoration: InputDecoration(
+            hintText: 'Enter visit purpose',
+            prefixIcon: const Icon(Icons.description, color: AppColors.textSecondary),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.grey.shade300),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: AppColors.primary, width: 2),
+            ),
+          ),
+          maxLines: 2,
+          validator: (value) {
+            if (value?.isEmpty ?? true) return 'Purpose is required';
+            return null;
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDateTimePickers() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Date & Time *',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: AppColors.textPrimary,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            Expanded(
+              child: InkWell(
+                onTap: _selectDate,
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey.shade300),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.calendar_today, color: AppColors.textSecondary),
+                      const SizedBox(width: 12),
+                      Text(
+                        _selectedDate != null
+                            ? '${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}'
+                            : 'Select date',
+                        style: TextStyle(
+                          color: _selectedDate != null ? AppColors.textPrimary : AppColors.textSecondary,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: InkWell(
+                onTap: _selectTime,
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey.shade300),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.access_time, color: AppColors.textSecondary),
+                      const SizedBox(width: 12),
+                      Text(
+                        _selectedTime != null
+                            ? _selectedTime!.format(context)
+                            : 'Select time',
+                        style: TextStyle(
+                          color: _selectedTime != null ? AppColors.textPrimary : AppColors.textSecondary,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildActionButtons() {
+    return Column(
+      children: [
+        SizedBox(
+          width: double.infinity,
           child: ElevatedButton(
             onPressed: _sendInvitation,
-            child: const Text('Send Invitation'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            child: const Text(
+              'Generate Link',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textLight,
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
+        SizedBox(
+          width: double.infinity,
+          child: OutlinedButton(
+            onPressed: () => Navigator.pop(context),
+            style: OutlinedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              side: const BorderSide(color: AppColors.textSecondary),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textSecondary,
+              ),
+            ),
           ),
         ),
       ],

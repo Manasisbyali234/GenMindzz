@@ -29,9 +29,14 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
     return Scaffold(
       appBar: AppBar(
         title: const Text('Notifications'),
+        backgroundColor: AppColors.primary,
+        foregroundColor: AppColors.textLight,
         bottom: TabBar(
           controller: _tabController,
           isScrollable: true,
+          labelColor: AppColors.textLight,
+          unselectedLabelColor: AppColors.textLight.withOpacity(0.7),
+          indicatorColor: AppColors.textLight,
           tabs: const [
             Tab(text: 'All'),
             Tab(text: 'Arrivals'),
