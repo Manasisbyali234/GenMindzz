@@ -22,66 +22,64 @@ class MainNavigation extends ConsumerWidget {
     return Scaffold(
       body: child,
       bottomNavigationBar: _buildBottomNavigation(context, user.role),
-      floatingActionButton: user.role == UserRole.security ? _buildQRScanButton(context) : null,
-      floatingActionButtonLocation: user.role == UserRole.security 
-          ? FloatingActionButtonLocation.centerDocked 
-          : null,
+      floatingActionButton: _buildFloatingActionButton(context, user.role),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
     );
   }
 
   Widget _buildBottomNavigation(BuildContext context, UserRole role) {
-    if (role == UserRole.security) {
-      return BottomAppBar(
-        shape: const CircularNotchedRectangle(),
-        notchMargin: 8,
-        color: AppColors.cardBackground,
-        elevation: 8,
-        child: SizedBox(
-          height: 60,
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, -2),
+          ),
+        ],
+      ),
+      child: SafeArea(
+        child: Container(
+          height: 70,
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _buildNavItem(Icons.home, 'Home', 0, context, role),
-              _buildNavItem(Icons.person, 'Profile', 1, context, role),
+              _buildNavItem(Icons.home_outlined, 'Home', 0, context, role),
+              _buildNavItem(Icons.notifications_outlined, 'Alerts', 1, context, role),
+              const SizedBox(width: 60), // Space for FAB
+              _buildNavItem(Icons.person_outline, 'Profile', role == UserRole.security ? 1 : 3, context, role),
+              _buildNavItem(Icons.logout, 'Exit', role == UserRole.security ? 1 : 4, context, role),
             ],
           ),
         ),
-      );
-    } else {
-      return BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        backgroundColor: AppColors.cardBackground,
-        selectedItemColor: AppColors.primary,
-        unselectedItemColor: AppColors.textSecondary,
-        currentIndex: _getCurrentIndex(context, role),
-        onTap: (index) => _onTap(context, index, role),
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.dashboard), label: 'Dashboard'),
-          BottomNavigationBarItem(icon: Icon(Icons.people), label: 'Visitors'),
-          BottomNavigationBarItem(icon: Icon(Icons.notifications), label: 'Alerts'),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
-        ],
-      );
-    }
+      ),
+    );
   }
 
-  Widget _buildNavItem(IconData icon, String label, int index, BuildContext context, UserRole role) {
-    final isSelected = _getCurrentIndex(context, role) == index;
+  Widget _buildNavItem(IconData icon, String label, int targetIndex, BuildContext context, UserRole role) {
+    final currentIndex = _getCurrentIndex(context, role);
+    final isSelected = _isNavItemSelected(label, context, role);
+    
     return GestureDetector(
-      onTap: () => _onTap(context, index, role),
+      onTap: () => _onNavItemTap(label, context, role),
       child: Column(
         mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(
             icon,
-            color: isSelected ? AppColors.primary : AppColors.textSecondary,
+            size: 24,
+            color: isSelected ? const Color(0xFF1C88E5) : const Color(0xFF9FB6C5),
           ),
           const SizedBox(height: 4),
           Text(
             label,
             style: TextStyle(
-              fontSize: 12,
-              color: isSelected ? AppColors.primary : AppColors.textSecondary,
+              fontSize: 11,
+              fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+              color: isSelected ? const Color(0xFF1C88E5) : const Color(0xFF9FB6C5),
             ),
           ),
         ],
@@ -89,29 +87,74 @@ class MainNavigation extends ConsumerWidget {
     );
   }
 
-  Widget _buildQRScanButton(BuildContext context) {
+  bool _isNavItemSelected(String label, BuildContext context, UserRole role) {
+    final location = GoRouterState.of(context).uri.path;
+    switch (label) {
+      case 'Home':
+        return location == '/dashboard' || location == '/scanner';
+      case 'Alerts':
+        return location == '/notifications';
+      case 'Profile':
+        return location == '/profile';
+      case 'Exit':
+        return false;
+      default:
+        return false;
+    }
+  }
+
+  void _onNavItemTap(String label, BuildContext context, UserRole role) {
+    switch (label) {
+      case 'Home':
+        if (role == UserRole.security) {
+          context.go('/scanner');
+        } else {
+          context.go('/dashboard');
+        }
+        break;
+      case 'Alerts':
+        context.go('/notifications');
+        break;
+      case 'Profile':
+        context.go('/profile');
+        break;
+      case 'Exit':
+        context.go('/');
+        break;
+    }
+  }
+
+  Widget _buildFloatingActionButton(BuildContext context, UserRole role) {
     return Container(
-      width: 64,
-      height: 64,
+      width: 60,
+      height: 60,
       decoration: BoxDecoration(
-        gradient: AppColors.primaryGradient,
-        borderRadius: BorderRadius.circular(32),
+        gradient: const LinearGradient(
+          colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
+        ),
+        borderRadius: BorderRadius.circular(30),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withOpacity(0.3),
-            blurRadius: 12,
-            offset: const Offset(0, 6),
+            color: const Color(0xFF6366F1).withOpacity(0.4),
+            blurRadius: 15,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
       child: FloatingActionButton(
-        onPressed: () => context.go('/scanner'),
+        onPressed: () {
+          if (role == UserRole.security) {
+            context.go('/scanner');
+          } else {
+            // Open invite modal for employees
+          }
+        },
         backgroundColor: Colors.transparent,
         elevation: 0,
-        child: const Icon(
-          Icons.qr_code_scanner,
-          color: AppColors.textLight,
-          size: 28,
+        child: Icon(
+          role == UserRole.security ? Icons.qr_code_scanner : Icons.person_add,
+          color: Colors.white,
+          size: 24,
         ),
       ),
     );

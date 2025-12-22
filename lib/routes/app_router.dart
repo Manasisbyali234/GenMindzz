@@ -1,19 +1,22 @@
 
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../features/auth/login_screen.dart';
 import '../features/role/role_selection_screen.dart';
 import '../features/scanner/scanner_screen.dart';
 import '../features/visitors/visitors_screen.dart';
+import '../features/visitors/visitor_detail_screen.dart';
 import '../features/dashboard/dashboard_screen.dart';
 import '../features/notifications/notifications_screen.dart';
 import '../features/profile/profile_screen.dart';
 import '../core/widgets/main_navigation.dart';
+import '../models/visitor.dart';
 
 final GoRouter appRouter = GoRouter(
-  initialLocation: '/login',
+  initialLocation: '/',
   routes: [
     GoRoute(
-      path: '/login',
+      path: '/',
       builder: (context, state) => const LoginScreen(),
     ),
     GoRoute(
@@ -42,6 +45,21 @@ final GoRouter appRouter = GoRouter(
         GoRoute(
           path: '/profile',
           builder: (context, state) => const ProfileScreen(),
+        ),
+        GoRoute(
+          path: '/visitor-detail/:id',
+          builder: (context, state) {
+            final visitor = state.extra as Visitor?;
+            if (visitor == null) {
+              // Fallback if visitor is not passed via extra
+              return const Scaffold(
+                body: Center(
+                  child: Text('Visitor not found'),
+                ),
+              );
+            }
+            return VisitorDetailScreen(visitor: visitor);
+          },
         ),
       ],
     ),

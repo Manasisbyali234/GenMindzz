@@ -73,22 +73,23 @@ class NotificationCard extends StatelessWidget {
           style: TextStyle(
             fontWeight: notification.isRead ? FontWeight.normal : FontWeight.bold,
             fontSize: 16,
+            color: Colors.black,
           ),
         ),
         const SizedBox(height: 4),
         Text(
           notification.description,
-          style: const TextStyle(color: AppColors.textSecondary),
+          style: const TextStyle(color: Colors.black54),
         ),
         const SizedBox(height: 8),
         Row(
           children: [
-            const Icon(Icons.person, size: 14, color: AppColors.textSecondary),
+            const Icon(Icons.person, size: 14, color: Colors.black54),
             const SizedBox(width: 4),
             Text(
               '${notification.visitor} → ${notification.host}',
               style: const TextStyle(
-                color: AppColors.textSecondary,
+                color: Colors.black54,
                 fontSize: 12,
               ),
             ),
@@ -151,7 +152,7 @@ class NotificationCard extends StatelessWidget {
     return Text(
       timeAgo,
       style: const TextStyle(
-        color: AppColors.textSecondary,
+        color: Colors.black54,
         fontSize: 12,
       ),
     );

@@ -102,15 +102,10 @@ class VisitorDetailsModal extends StatelessWidget {
       children: [
         CircleAvatar(
           radius: 40,
-          backgroundColor: AppColors.primary.withOpacity(0.1),
-          child: Text(
-            visitor.name[0].toUpperCase(),
-            style: const TextStyle(
-              fontSize: 32,
-              fontWeight: FontWeight.bold,
-              color: AppColors.primary,
-            ),
+          backgroundImage: NetworkImage(
+            'https://picsum.photos/seed/${visitor.name.hashCode.abs()}/200/200',
           ),
+          backgroundColor: AppColors.primary.withOpacity(0.1),
         ),
         const SizedBox(height: 16),
         Text(

@@ -46,14 +46,23 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
           onTap: (index) => _onTabChanged(index),
         ),
       ),
-      body: TabBarView(
-        controller: _tabController,
-        children: [
-          _buildNotificationsList(notifications),
-          _buildNotificationsList(notifications),
-          _buildNotificationsList(notifications),
-          _buildNotificationsList(notifications),
-        ],
+      body: Container(
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(24),
+            topRight: Radius.circular(24),
+          ),
+        ),
+        child: TabBarView(
+          controller: _tabController,
+          children: [
+            _buildNotificationsList(notifications),
+            _buildNotificationsList(notifications),
+            _buildNotificationsList(notifications),
+            _buildNotificationsList(notifications),
+          ],
+        ),
       ),
     );
   }
@@ -64,9 +73,9 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.notifications_none, size: 64, color: AppColors.textSecondary),
+            Icon(Icons.notifications_none, size: 64, color: Colors.black54),
             SizedBox(height: 16),
-            Text('No notifications', style: TextStyle(color: AppColors.textSecondary)),
+            Text('No notifications', style: TextStyle(color: Colors.black54)),
           ],
         ),
       );

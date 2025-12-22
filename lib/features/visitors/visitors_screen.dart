@@ -46,14 +46,34 @@ class _VisitorsScreenState extends ConsumerState<VisitorsScreen>
       ),
       body: Column(
         children: [
-          _buildSearchAndFilters(selectedFilter),
+          // Blue Search Section
+          Container(
+            decoration: const BoxDecoration(
+              color: AppColors.primary,
+              borderRadius: BorderRadius.only(
+                bottomLeft: Radius.circular(24),
+                bottomRight: Radius.circular(24),
+              ),
+            ),
+            child: _buildSearchAndFilters(selectedFilter),
+          ),
+          // White Visitor List Section
           Expanded(
-            child: TabBarView(
-              controller: _tabController,
-              children: [
-                _buildVisitorsList(visitors),
-                _buildVisitorsList(visitors),
-              ],
+            child: Container(
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(24),
+                  topRight: Radius.circular(24),
+                ),
+              ),
+              child: TabBarView(
+                controller: _tabController,
+                children: [
+                  _buildVisitorsList(visitors),
+                  _buildVisitorsList(visitors),
+                ],
+              ),
             ),
           ),
         ],
@@ -71,12 +91,24 @@ class _VisitorsScreenState extends ConsumerState<VisitorsScreen>
       padding: const EdgeInsets.all(16),
       child: Column(
         children: [
-          TextField(
-            controller: _searchController,
-            decoration: InputDecoration(
-              hintText: 'Search visitors...',
-              prefixIcon: const Icon(Icons.search),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(30),
+              border: Border.all(color: Colors.grey.shade300),
+            ),
+            child: TextField(
+              controller: _searchController,
+              style: const TextStyle(color: Colors.black),
+              decoration: const InputDecoration(
+                hintText: 'Search visitors...',
+                hintStyle: TextStyle(color: Colors.grey),
+                prefixIcon: Icon(Icons.search, color: Colors.grey),
+                border: InputBorder.none,
+                contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                fillColor: Colors.white,
+                filled: true,
+              ),
             ),
           ),
           const SizedBox(height: 16),
@@ -102,14 +134,27 @@ class _VisitorsScreenState extends ConsumerState<VisitorsScreen>
   Widget _buildFilterChip(String label, VisitorStatus? status, VisitorStatus? selectedFilter) {
     final isSelected = selectedFilter == status;
     
-    return FilterChip(
-      label: Text(label),
-      selected: isSelected,
-      onSelected: (selected) {
-        ref.read(selectedFilterProvider.notifier).state = selected ? status : null;
-      },
-      selectedColor: AppColors.primary.withOpacity(0.2),
-      checkmarkColor: AppColors.primary,
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: isSelected ? Colors.white : Colors.white.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: isSelected ? Colors.white : Colors.white.withOpacity(0.3),
+        ),
+      ),
+      child: InkWell(
+        onTap: () {
+          ref.read(selectedFilterProvider.notifier).state = isSelected ? null : status;
+        },
+        child: Text(
+          label,
+          style: TextStyle(
+            color: isSelected ? AppColors.primary : Colors.white,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ),
     );
   }
 

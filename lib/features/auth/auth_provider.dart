@@ -23,8 +23,25 @@ class AuthNotifier extends StateNotifier<AuthState> {
     state = state.copyWith(isLoading: true);
     await Future.delayed(const Duration(seconds: 1)); // Mock delay
     
-    if (employeeId.isNotEmpty && password.isNotEmpty) {
-      state = state.copyWith(isLoading: false);
+    UserRole? role;
+    String? name;
+    
+    if (employeeId == 'SEC001' && password == 'Security@123') {
+      role = UserRole.security;
+      name = 'Security Officer';
+    } else if (employeeId == 'EMP001' && password == 'Employee@123') {
+      role = UserRole.employee;
+      name = 'Employee';
+    }
+    
+    if (role != null && name != null) {
+      final user = User(
+        id: employeeId,
+        name: name,
+        email: '${employeeId.toLowerCase()}@company.com',
+        role: role,
+      );
+      state = state.copyWith(user: user, isLoading: false);
       return true;
     }
     

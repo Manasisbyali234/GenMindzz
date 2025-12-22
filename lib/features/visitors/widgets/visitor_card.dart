@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../models/visitor.dart';
 
@@ -9,17 +10,20 @@ class VisitorCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          children: [
-            _buildAvatar(),
-            const SizedBox(width: 16),
-            Expanded(child: _buildVisitorInfo()),
-            _buildStatusBadge(),
-          ],
+    return GestureDetector(
+      onTap: () => context.push('/visitor-detail/${visitor.id}', extra: visitor),
+      child: Card(
+        margin: const EdgeInsets.only(bottom: 12),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              _buildAvatar(),
+              const SizedBox(width: 16),
+              Expanded(child: _buildVisitorInfo()),
+              _buildStatusBadge(),
+            ],
+          ),
         ),
       ),
     );
@@ -48,26 +52,27 @@ class VisitorCard extends StatelessWidget {
           style: const TextStyle(
             fontWeight: FontWeight.bold,
             fontSize: 16,
+            color: Colors.black,
           ),
         ),
         const SizedBox(height: 4),
         Text(
           'Host: ${visitor.host}',
-          style: const TextStyle(color: AppColors.textSecondary),
+          style: const TextStyle(color: Colors.black54),
         ),
         Text(
           'Dept: ${visitor.department}',
-          style: const TextStyle(color: AppColors.textSecondary),
+          style: const TextStyle(color: Colors.black54),
         ),
         Text(
           visitor.purpose,
-          style: const TextStyle(color: AppColors.textSecondary),
+          style: const TextStyle(color: Colors.black54),
         ),
         const SizedBox(height: 4),
         Text(
           _formatTime(visitor.visitTime),
           style: const TextStyle(
-            color: AppColors.textSecondary,
+            color: Colors.black54,
             fontSize: 12,
           ),
         ),

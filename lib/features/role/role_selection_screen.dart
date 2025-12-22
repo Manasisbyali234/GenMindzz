@@ -47,7 +47,7 @@ class _RoleSelectionScreenState extends ConsumerState<RoleSelectionScreen> {
                 style: TextStyle(
                   fontSize: 32,
                   fontWeight: FontWeight.bold,
-                  color: AppColors.primary,
+                  color: AppColors.textLight,
                 ),
               ),
               const SizedBox(height: 8),
@@ -56,7 +56,7 @@ class _RoleSelectionScreenState extends ConsumerState<RoleSelectionScreen> {
                 'Visitor Management System',
                 style: TextStyle(
                   fontSize: 16,
-                  color: AppColors.textSecondary,
+                  color: AppColors.textLight,
                 ),
               ),
               const SizedBox(height: 60),
@@ -81,6 +81,8 @@ class _RoleSelectionScreenState extends ConsumerState<RoleSelectionScreen> {
                 child: ElevatedButton(
                   onPressed: selectedRole != null ? _handleContinue : null,
                   style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    foregroundColor: AppColors.primary,
                     padding: const EdgeInsets.symmetric(vertical: 18),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -153,7 +155,7 @@ class _RoleSelectionScreenState extends ConsumerState<RoleSelectionScreen> {
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.w600,
-                          color: isSelected ? AppColors.textLight : AppColors.textPrimary,
+                          color: isSelected ? AppColors.textLight : AppColors.textLight,
                         ),
                       ),
                       const SizedBox(height: 6),
@@ -163,7 +165,7 @@ class _RoleSelectionScreenState extends ConsumerState<RoleSelectionScreen> {
                           fontSize: 14,
                           color: isSelected 
                               ? AppColors.textLight.withOpacity(0.8)
-                              : AppColors.textSecondary,
+                              : AppColors.textLight.withOpacity(0.8),
                         ),
                       ),
                     ],

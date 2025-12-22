@@ -2,109 +2,187 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../auth/auth_provider.dart';
-import '../../core/constants/app_colors.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final user = ref.watch(authProvider).user;
-
     return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('Profile'),
-        backgroundColor: AppColors.primary,
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            const SizedBox(height: 20),
-            _buildUserInfo(user?.name ?? 'User', user?.email ?? '', user?.role.name ?? ''),
-            const SizedBox(height: 32),
-            _buildMenuItems(context, ref),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildUserInfo(String name, String email, String role) {
-    final isSecurityUser = role.toLowerCase() == 'security';
-    
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: AppColors.cardBackground,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
+      backgroundColor: Colors.white,
+      body: Column(
         children: [
+          // Dark Blue Gradient Header
           Container(
-            width: 80,
-            height: 80,
-            decoration: BoxDecoration(
-              gradient: isSecurityUser ? AppColors.primaryGradient : AppColors.accentGradient,
-              borderRadius: BorderRadius.circular(20),
+            width: double.infinity,
+            decoration: const BoxDecoration(
+              color: Color(0xFF0f172a),
             ),
-            child: Icon(
-              isSecurityUser ? Icons.shield : Icons.person,
-              size: 40,
-              color: AppColors.textLight,
-            ),
-          ),
-          const SizedBox(height: 20),
-          Text(
-            isSecurityUser ? 'Officer $name' : name,
-            style: const TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.bold,
-              color: AppColors.textPrimary,
-            ),
-          ),
-          const SizedBox(height: 8),
-          if (isSecurityUser) ...[
-            const Text(
-              'Officer ID: SEC001',
-              style: TextStyle(
-                color: AppColors.textSecondary,
-                fontSize: 16,
+            child: SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: Row(
+                  children: [
+                    // Left side - User info
+                    Row(
+                      children: [
+                        CircleAvatar(
+                          radius: 18,
+                          backgroundColor: Colors.white.withOpacity(0.2),
+                          child: const Icon(Icons.person, color: Colors.white, size: 20),
+                        ),
+                        const SizedBox(width: 12),
+                        const Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Jane Doe',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            Text(
+                              'EMPLOYEE',
+                              style: TextStyle(
+                                color: Color(0xFF7F8AA3),
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                    const Spacer(),
+                    // Right side - Icons
+                    IconButton(
+                      onPressed: () {},
+                      icon: const Icon(Icons.notifications_outlined, color: Colors.white),
+                    ),
+                    IconButton(
+                      onPressed: () {},
+                      icon: const Icon(Icons.logout, color: Colors.white),
+                    ),
+                  ],
+                ),
               ),
             ),
-            const SizedBox(height: 12),
-          ] else ...[
-            Text(
-              email,
-              style: const TextStyle(
-                color: AppColors.textSecondary,
-                fontSize: 16,
-              ),
-            ),
-            const SizedBox(height: 12),
-          ],
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            decoration: BoxDecoration(
-              color: AppColors.approved.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Text(
-              isSecurityUser ? 'ACTIVE DUTY' : role.toUpperCase(),
-              style: const TextStyle(
-                color: AppColors.approved,
-                fontWeight: FontWeight.bold,
-                fontSize: 12,
-                letterSpacing: 0.5,
+          ),
+          
+          // Profile Content
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                children: [
+                  const SizedBox(height: 20),
+                  
+                  // Profile Identity Section (Center Focus)
+                  Column(
+                    children: [
+                      // Profile Image
+                      Container(
+                        width: 80,
+                        height: 80,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.grey.shade100,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.1),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Icon(
+                          Icons.person,
+                          size: 40,
+                          color: Colors.grey.shade400,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      
+                      // Name & Role
+                      const Text(
+                        'Jane Doe',
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF0f172a),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      const Text(
+                        'Software Engineering',
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Color(0xFF7F8AA3),
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                  
+                  const SizedBox(height: 40),
+                  
+                  // Information Card (Account Details)
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: const Color(0xFFEEF2F7)),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 10,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      children: [
+                        _buildInfoRow('Employee ID', 'EMP001'),
+                        const SizedBox(height: 20),
+                        _buildInfoRow('Access Level', 'Tier1 Security'),
+                        const SizedBox(height: 20),
+                        _buildInfoRow('Status', 'Active'),
+                      ],
+                    ),
+                  ),
+                  
+                  const SizedBox(height: 40),
+                  
+                  // Sign Out Button
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: () => _handleSignOut(context, ref),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFFFEBEE),
+                        foregroundColor: const Color(0xFF4f46e5),
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        elevation: 0,
+                      ),
+                      child: const Text(
+                        'Sign Out',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                  
+                  const SizedBox(height: 100), // Space for bottom navigation
+                ],
               ),
             ),
           ),
@@ -113,151 +191,33 @@ class ProfileScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildMenuItems(BuildContext context, WidgetRef ref) {
-    return Column(
+  Widget _buildInfoRow(String label, String value) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        _buildMenuItem(
-          icon: Icons.settings,
-          title: 'App Settings',
-          onTap: () => _showAppInfo(context),
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 16,
+            color: Color(0xFF7F8AA3),
+            fontWeight: FontWeight.w500,
+          ),
         ),
-        _buildMenuItem(
-          icon: Icons.logout,
-          title: 'Logout',
-          onTap: () => _logout(context, ref),
-          isDestructive: true,
+        Text(
+          value,
+          style: const TextStyle(
+            fontSize: 16,
+            color: Color(0xFF0f172a),
+            fontWeight: FontWeight.w600,
+          ),
         ),
       ],
     );
   }
 
-  Widget _buildMenuItem({
-    required IconData icon,
-    required String title,
-    required VoidCallback onTap,
-    bool isDestructive = false,
-  }) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: AppColors.cardBackground,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-        leading: Container(
-          width: 40,
-          height: 40,
-          decoration: BoxDecoration(
-            color: isDestructive 
-                ? AppColors.rejected.withOpacity(0.1)
-                : AppColors.primary.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Icon(
-            icon,
-            color: isDestructive ? AppColors.rejected : AppColors.primary,
-            size: 20,
-          ),
-        ),
-        title: Text(
-          title,
-          style: TextStyle(
-            color: isDestructive ? AppColors.rejected : AppColors.textPrimary,
-            fontWeight: FontWeight.w600,
-            fontSize: 16,
-          ),
-        ),
-        trailing: Icon(
-          Icons.chevron_right,
-          color: AppColors.textSecondary,
-        ),
-        onTap: onTap,
-      ),
-    );
-  }
-
-  void _showAppInfo(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('App Info'),
-        content: const Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('VisitorGuard v1.0.0'),
-            SizedBox(height: 8),
-            Text('A comprehensive visitor management system for enhanced security and streamlined visitor experiences.'),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Close'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showSupport(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Support'),
-        content: const Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Need help?'),
-            SizedBox(height: 16),
-            Text('Email: support@visitorguard.com'),
-            Text('Phone: +1 (555) 123-4567'),
-            Text('Hours: 9 AM - 6 PM (Mon-Fri)'),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Close'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _logout(BuildContext context, WidgetRef ref) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Logout'),
-        content: const Text('Are you sure you want to logout?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              ref.read(authProvider.notifier).logout();
-              Navigator.pop(context);
-              context.go('/login');
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.overstay,
-            ),
-            child: const Text('Logout'),
-          ),
-        ],
-      ),
-    );
+  void _handleSignOut(BuildContext context, WidgetRef ref) {
+    // Handle sign out logic
+    ref.read(authProvider.notifier).logout();
+    context.go('/');
   }
 }
