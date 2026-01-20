@@ -7,6 +7,8 @@ import '../visitors/visitors_provider.dart';
 import '../auth/auth_provider.dart';
 import '../../models/user.dart';
 import 'widgets/invite_visitor_modal.dart';
+import 'widgets/date_time_selector.dart';
+import 'widgets/appointment_date_selector.dart';
 
 class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
@@ -18,6 +20,8 @@ class DashboardScreen extends ConsumerStatefulWidget {
 class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   String selectedFilter = 'All';
   String selectedTab = 'My Visitors';
+  String selectedScheduleTab = 'Schedule'; // New state for Schedule/Invited tabs
+  DateTime selectedAppointmentDate = DateTime.now(); // New state for selected date
 
   List<Visitor> _filterVisitorsForEmployee(List<Visitor> visitors) {
     switch (selectedFilter) {
@@ -320,67 +324,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   }
 
   Widget _buildDateTimeFilters() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Date & Time',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            color: Colors.black87,
-          ),
-        ),
-        const SizedBox(height: 12),
-        Row(
-          children: [
-            Expanded(
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.grey.shade300),
-                ),
-                child: Row(
-                  children: [
-                    Icon(Icons.calendar_today, size: 16, color: Colors.grey.shade600),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Today',
-                      style: TextStyle(color: Colors.grey.shade700),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(width: 12),
-            _buildTimeButton('AM'),
-            const SizedBox(width: 8),
-            _buildTimeButton('PM'),
-          ],
-        ),
-      ],
-    );
+    return const DateTimeSelector();
   }
 
-  Widget _buildTimeButton(String time) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: Colors.grey.shade100,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade300),
-      ),
-      child: Text(
-        time,
-        style: TextStyle(
-          color: Colors.grey.shade700,
-          fontWeight: FontWeight.w500,
-        ),
-      ),
-    );
-  }
+
 
   Widget _buildVisitorListCards(List<Visitor> visitors) {
     if (visitors.isEmpty) {
@@ -1473,12 +1420,18 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     return [
       _buildScheduleHeader(visitors.length),
       const SizedBox(height: 20),
+      _buildScheduleTabNavigation(),
+      const SizedBox(height: 16),
+      _buildAppointmentDateSelector(),
+      const SizedBox(height: 20),
       _buildAppointmentTimeline(visitors),
     ];
   }
 
   List<Widget> _buildInsightsContent() {
     return [
+      _buildInsightStatsGrid(),
+      const SizedBox(height: 20),
       _buildWeeklyTrafficCard(),
       const SizedBox(height: 20),
       _buildKPISummaryCards(),
@@ -1525,6 +1478,75 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           ),
           const SizedBox(height: 24),
           _buildWeeklyChart(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInsightStatsGrid() {
+    return GridView.count(
+      crossAxisCount: 2,
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      crossAxisSpacing: 12,
+      mainAxisSpacing: 12,
+      childAspectRatio: 1.5,
+      children: [
+        _buildInsightStatCard('Peak Hours', '10-11 AM', Icons.schedule, Colors.orange),
+        _buildInsightStatCard('Avg Visit', '45 min', Icons.timer, Colors.blue),
+        _buildInsightStatCard('Capacity', '85%', Icons.people, Colors.red),
+        _buildInsightStatCard('Efficiency', '92%', Icons.trending_up, Colors.green),
+      ],
+    );
+  }
+
+  Widget _buildInsightStatCard(String label, String value, IconData icon, Color color) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(icon, color: color, size: 20),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                value,
+                style: const TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+              ),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey.shade600,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
         ],
       ),
     );
@@ -1678,6 +1700,68 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildScheduleTabNavigation() {
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade200,
+        borderRadius: BorderRadius.circular(25),
+      ),
+      child: Row(
+        children: [
+          _buildScheduleTab('Schedule'),
+          _buildScheduleTab('Invited'),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildScheduleTab(String title) {
+    final isActive = selectedScheduleTab == title;
+    return Expanded(
+      child: GestureDetector(
+        onTap: () {
+          setState(() {
+            selectedScheduleTab = title;
+          });
+        },
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          decoration: isActive ? BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 4,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ) : null,
+          child: Text(
+            title,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: isActive ? Colors.blue : Colors.grey.shade600,
+              fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
+              fontSize: 14,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAppointmentDateSelector() {
+    return AppointmentDateSelector(
+      onDateSelected: (DateTime date) {
+        setState(() {
+          selectedAppointmentDate = date;
+        });
+      },
     );
   }
 
