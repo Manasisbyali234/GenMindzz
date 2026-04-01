@@ -1,4 +1,4 @@
-package com.example.visitor_guard
+package com.example.genmindz
 
 import io.flutter.embedding.android.FlutterActivity
 

@@ -4,16 +4,16 @@ import 'core/theme/app_theme.dart';
 import 'routes/app_router.dart';
 
 void main() {
-  runApp(const ProviderScope(child: VisitorGuardApp()));
+  runApp(const ProviderScope(child: GenMindzApp()));
 }
 
-class VisitorGuardApp extends StatelessWidget {
-  const VisitorGuardApp({super.key});
+class GenMindzApp extends StatelessWidget {
+  const GenMindzApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp.router(
-      title: 'VisitorGuard',
+      title: 'GenMindz',
       theme: AppTheme.lightTheme,
       routerConfig: appRouter,
       debugShowCheckedModeBanner: false,

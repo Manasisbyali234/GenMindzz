@@ -8,15 +8,15 @@
 
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:visitor_guard/main.dart';
+import 'package:genmindz/main.dart';
 
 void main() {
-  testWidgets('VisitorGuard app smoke test', (WidgetTester tester) async {
+  testWidgets('GenMindz app smoke test', (WidgetTester tester) async {
     // Build our app and trigger a frame.
-    await tester.pumpWidget(const VisitorGuardApp());
+    await tester.pumpWidget(const GenMindzApp());
 
     // Verify that login screen is displayed.
-    expect(find.text('VisitorGuard'), findsOneWidget);
+    expect(find.text('GenMindz'), findsOneWidget);
     expect(find.text('Employee ID'), findsOneWidget);
   });
 }

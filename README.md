@@ -69,7 +69,7 @@ lib/
 
 1. **Clone the repository**
    ```bash
-   cd visitor_guard
+   cd genmindz
    ```
 
 2. **Install dependencies**

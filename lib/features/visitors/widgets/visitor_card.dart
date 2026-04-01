@@ -101,6 +101,18 @@ class VisitorCard extends StatelessWidget {
         color = AppColors.overstay;
         text = 'Overstay';
         break;
+      case VisitorStatus.invited:
+        color = const Color(0xFF4F46E5);
+        text = 'Invited';
+        break;
+      case VisitorStatus.checkedOut:
+        color = Colors.blueGrey;
+        text = 'Checked-out';
+        break;
+      case VisitorStatus.blocked:
+        color = Colors.red;
+        text = 'Blocked';
+        break;
     }
 
     return Container(

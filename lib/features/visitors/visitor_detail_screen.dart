@@ -140,13 +140,13 @@ class VisitorDetailScreen extends StatelessWidget {
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                               decoration: BoxDecoration(
-                                color: const Color(0xFFE9EDFF),
+                                color: _getStatusColor(visitor.status).withOpacity(0.1),
                                 borderRadius: BorderRadius.circular(20),
                               ),
-                              child: const Text(
-                                'UPCOMING',
+                              child: Text(
+                                _getStatusText(visitor.status),
                                 style: TextStyle(
-                                  color: Color(0xFF4f46e5),
+                                  color: _getStatusColor(visitor.status),
                                   fontSize: 12,
                                   fontWeight: FontWeight.w600,
                                 ),
@@ -311,6 +311,30 @@ class VisitorDetailScreen extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  Color _getStatusColor(VisitorStatus status) {
+    switch (status) {
+      case VisitorStatus.pending: return Colors.orange;
+      case VisitorStatus.approved: return Colors.blue;
+      case VisitorStatus.checkedIn: return Colors.green;
+      case VisitorStatus.overstay: return Colors.red;
+      case VisitorStatus.invited: return Colors.purple;
+      case VisitorStatus.checkedOut: return Colors.grey;
+      case VisitorStatus.blocked: return Colors.red;
+    }
+  }
+
+  String _getStatusText(VisitorStatus status) {
+    switch (status) {
+      case VisitorStatus.pending: return 'Pending';
+      case VisitorStatus.approved: return 'Approved';
+      case VisitorStatus.checkedIn: return 'Checked In';
+      case VisitorStatus.overstay: return 'Overstay';
+      case VisitorStatus.invited: return 'Invited';
+      case VisitorStatus.checkedOut: return 'Checked Out';
+      case VisitorStatus.blocked: return 'Blocked';
+    }
   }
 
   Widget _buildInfoCard(IconData icon, String label, String value) {

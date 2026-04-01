@@ -1,4 +1,4 @@
-# VisitorGuard - Build Summary
+# GenMindz - Build Summary
 
 ## ✅ Successfully Built Flutter Application
 
@@ -85,7 +85,7 @@
 1. **Transfer APK**: Copy `app-release.apk` to Android device
 2. **Enable Unknown Sources**: Settings > Security > Unknown Sources
 3. **Install**: Tap APK file and follow prompts
-4. **Launch**: Open VisitorGuard app
+4. **Launch**: Open GenMindz app
 
 ### 🔐 Test Credentials
 - **Employee ID**: Any non-empty text
@@ -109,4 +109,4 @@
 
 ## 🏁 Ready for Deployment
 
-The VisitorGuard application is now complete and ready for use. The APK can be installed on any Android device for testing and demonstration purposes.
+The GenMindz application is now complete and ready for use. The APK can be installed on any Android device for testing and demonstration purposes.

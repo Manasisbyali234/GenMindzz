@@ -1,4 +1,4 @@
-enum VisitorStatus { pending, approved, checkedIn, overstay }
+enum VisitorStatus { pending, approved, checkedIn, overstay, invited, checkedOut, blocked }
 
 class Visitor {
   final String id;

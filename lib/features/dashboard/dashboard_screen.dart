@@ -19,16 +19,25 @@ class DashboardScreen extends ConsumerStatefulWidget {
 
 class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   String selectedFilter = 'All';
-  String selectedTab = 'My Visitors';
+  String selectedTab = 'Visitor Requests';
   String selectedScheduleTab = 'Schedule'; // New state for Schedule/Invited tabs
   DateTime selectedAppointmentDate = DateTime.now(); // New state for selected date
 
   List<Visitor> _filterVisitorsForEmployee(List<Visitor> visitors) {
     switch (selectedFilter) {
-      case 'Pending Requests':
+      case 'Requests':
+      case 'Pending':
         return visitors.where((v) => v.status == VisitorStatus.pending).toList();
-      case 'Invited Visitors':
+      case 'Invited':
+        return visitors.where((v) => v.status == VisitorStatus.invited).toList();
+      case 'Approved':
         return visitors.where((v) => v.status == VisitorStatus.approved).toList();
+      case 'Checked In':
+        return visitors.where((v) => v.status == VisitorStatus.checkedIn).toList();
+      case 'Checked Out':
+        return visitors.where((v) => v.status == VisitorStatus.checkedOut).toList();
+      case 'Blocked':
+        return visitors.where((v) => v.status == VisitorStatus.blocked).toList();
       default:
         return visitors;
     }
@@ -65,7 +74,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   children: [
                     _buildTabNavigation(),
                     const SizedBox(height: 20),
-                    if (selectedTab == 'My Visitors') ..._buildMyVisitorsContent(todayVisitors),
+                    if (selectedTab == 'Visitor Requests') ..._buildMyVisitorsContent(todayVisitors),
                     if (selectedTab == 'Schedule') ..._buildScheduleContent(todayVisitors),
                     if (selectedTab == 'Insights') ..._buildInsightsContent(),
                   ],
@@ -83,7 +92,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       padding: const EdgeInsets.all(20),
       decoration: const BoxDecoration(
         gradient: LinearGradient(
-          colors: [Color(0xFF0B4A6F), Color(0xFF1E5D82)],
+          colors: [Color(0xFF0B4A6F), Color.fromARGB(255, 4, 68, 105)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -157,7 +166,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       ),
       child: Row(
         children: [
-          _buildTab('My Visitors'),
+          _buildTab('Visitor Requests'),
           _buildTab('Schedule'),
           _buildTab('Insights'),
         ],
@@ -259,6 +268,92 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     );
   }
 
+  Widget _buildVisitorQuickActions() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Quick Actions',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: Colors.black87,
+          ),
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            _buildQuickActionCard(
+              'Visitor\nRecords',
+              Icons.assignment_outlined,
+              const Color(0xFF3B82F6),
+              () {},
+            ),
+            const SizedBox(width: 12),
+            _buildQuickActionCard(
+              'Pre-\nRegister',
+              Icons.how_to_reg_outlined,
+              const Color(0xFF10B981),
+              () {},
+            ),
+            const SizedBox(width: 12),
+            _buildQuickActionCard(
+              'Work\nPermit',
+              Icons.badge_outlined,
+              const Color(0xFFF59E0B),
+              () {},
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildQuickActionCard(String title, IconData icon, Color color, VoidCallback onTap) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(icon, color: color, size: 24),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                  height: 1.2,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildFilterVisitorsSection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -278,9 +373,19 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             children: [
               _buildEmployeeFilterChip('All', selectedFilter == 'All'),
               const SizedBox(width: 8),
-              _buildEmployeeFilterChip('Pending Requests', selectedFilter == 'Pending Requests'),
+              _buildEmployeeFilterChip('Requests', selectedFilter == 'Requests'),
               const SizedBox(width: 8),
-              _buildEmployeeFilterChip('Invited Visitors', selectedFilter == 'Invited Visitors'),
+              _buildEmployeeFilterChip('Invited', selectedFilter == 'Invited'),
+              const SizedBox(width: 8),
+              _buildEmployeeFilterChip('Pending', selectedFilter == 'Pending'),
+              const SizedBox(width: 8),
+              _buildEmployeeFilterChip('Approved', selectedFilter == 'Approved'),
+              const SizedBox(width: 8),
+              _buildEmployeeFilterChip('Checked In', selectedFilter == 'Checked In'),
+              const SizedBox(width: 8),
+              _buildEmployeeFilterChip('Checked Out', selectedFilter == 'Checked Out'),
+              const SizedBox(width: 8),
+              _buildEmployeeFilterChip('Blocked', selectedFilter == 'Blocked'),
             ],
           ),
         ),
@@ -1143,12 +1248,19 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
   List<Visitor> _filterVisitors(List<Visitor> visitors) {
     switch (selectedFilter) {
-      case 'Expected':
+      case 'Requests':
+      case 'Pending':
         return visitors.where((v) => v.status == VisitorStatus.pending).toList();
-      case 'On Premises':
+      case 'Invited':
+        return visitors.where((v) => v.status == VisitorStatus.invited).toList();
+      case 'Approved':
+        return visitors.where((v) => v.status == VisitorStatus.approved).toList();
+      case 'Checked In':
         return visitors.where((v) => v.status == VisitorStatus.checkedIn).toList();
-      case 'Total Entries':
-        return visitors;
+      case 'Checked Out':
+        return visitors.where((v) => v.status == VisitorStatus.checkedOut).toList();
+      case 'Blocked':
+        return visitors.where((v) => v.status == VisitorStatus.blocked).toList();
       default:
         return visitors;
     }
@@ -1260,6 +1372,18 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       case VisitorStatus.overstay:
         color = AppColors.overstay;
         text = 'Overstay';
+        break;
+      case VisitorStatus.invited:
+        color = Colors.purple;
+        text = 'Invited';
+        break;
+      case VisitorStatus.checkedOut:
+        color = Colors.grey;
+        text = 'Checked Out';
+        break;
+      case VisitorStatus.blocked:
+        color = Colors.red;
+        text = 'Blocked';
         break;
     }
     
@@ -1394,11 +1518,19 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         children: [
           _buildFilterChip('All'),
           const SizedBox(width: 10),
-          _buildFilterChip('Expected'),
+          _buildFilterChip('Requests'),
           const SizedBox(width: 10),
-          _buildFilterChip('On Premises'),
+          _buildFilterChip('Invited'),
           const SizedBox(width: 10),
-          _buildFilterChip('Total Entries'),
+          _buildFilterChip('Pending'),
+          const SizedBox(width: 10),
+          _buildFilterChip('Approved'),
+          const SizedBox(width: 10),
+          _buildFilterChip('Checked In'),
+          const SizedBox(width: 10),
+          _buildFilterChip('Checked Out'),
+          const SizedBox(width: 10),
+          _buildFilterChip('Blocked'),
         ],
       ),
     );
@@ -1407,6 +1539,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   List<Widget> _buildMyVisitorsContent(List<Visitor> todayVisitors) {
     return [
       _buildInviteGuestCard(),
+      const SizedBox(height: 20),
+      _buildVisitorQuickActions(),
       const SizedBox(height: 20),
       _buildFilterVisitorsSection(),
       const SizedBox(height: 16),

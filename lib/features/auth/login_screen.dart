@@ -40,6 +40,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 constraints: const BoxConstraints(maxWidth: 400),
                 child: Form(
                   key: _formKey,
+                  child: SingleChildScrollView(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -66,7 +67,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       
                       // App Title
                       const Text(
-                        'VisitorGuard',
+                        'GenMindz',
                         style: TextStyle(
                           fontSize: 28,
                           fontWeight: FontWeight.bold,
@@ -323,6 +324,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         ],
                       ),
                     ],
+                  ),
                   ),
                 ),
               ),
