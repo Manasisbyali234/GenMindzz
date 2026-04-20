@@ -14,6 +14,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _identityController = TextEditingController(text: 'EMP001');
   final _tokenController = TextEditingController(text: 'Employee@123');
+  bool _captchaChecked = false;
+  bool _captchaError = false;
 
   @override
   Widget build(BuildContext context) {
@@ -244,8 +246,58 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           ),
                         ],
                       ),
+                      const SizedBox(height: 20),
+
+                      // Captcha
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF0f172a),
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(
+                            color: _captchaError ? Colors.red : const Color(0xFF1E2A3A),
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Checkbox(
+                              value: _captchaChecked,
+                              onChanged: (v) => setState(() {
+                                _captchaChecked = v ?? false;
+                                _captchaError = false;
+                              }),
+                              activeColor: const Color(0xFF5B5AF7),
+                              checkColor: Colors.white,
+                              side: const BorderSide(color: Color(0xFF7F8AA3)),
+                            ),
+                            const Text(
+                              "I'm not a robot",
+                              style: TextStyle(color: Color(0xFFA7B0C0), fontSize: 14),
+                            ),
+                            const Spacer(),
+                            Column(
+                              children: [
+                                Image.network(
+                                  'https://www.gstatic.com/recaptcha/api2/logo_48.png',
+                                  width: 32,
+                                  errorBuilder: (_, __, ___) => const Icon(Icons.security, color: Color(0xFF5B5AF7), size: 32),
+                                ),
+                                const Text('reCAPTCHA', style: TextStyle(color: Color(0xFF7F8AA3), fontSize: 9)),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                      if (_captchaError)
+                        const Padding(
+                          padding: EdgeInsets.only(top: 6, left: 4),
+                          child: Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text('Please verify you are not a robot', style: TextStyle(color: Colors.red, fontSize: 12)),
+                          ),
+                        ),
                       const SizedBox(height: 32),
-                      
+
                       // Authenticate Button
                       SizedBox(
                         width: double.infinity,
@@ -336,14 +388,25 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   Future<void> _handleLogin() async {
+    if (!_captchaChecked) {
+      setState(() => _captchaError = true);
+      return;
+    }
     if (_formKey.currentState?.validate() ?? false) {
       final success = await ref.read(authProvider.notifier).login(
         _identityController.text,
         _tokenController.text,
       );
-      
-      if (success && mounted) {
-        context.go('/dashboard');
+
+      if (mounted) {
+        if (success) {
+          context.go('/dashboard');
+        } else {
+          final error = ref.read(authProvider).error ?? 'Login failed';
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(error), backgroundColor: Colors.red),
+          );
+        }
       }
     }
   }

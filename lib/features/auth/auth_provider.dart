@@ -1,17 +1,18 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../models/user.dart';
 
-
 class AuthState {
   final User? user;
   final bool isLoading;
+  final String? error;
 
-  AuthState({this.user, this.isLoading = false});
+  AuthState({this.user, this.isLoading = false, this.error});
 
-  AuthState copyWith({User? user, bool? isLoading}) {
+  AuthState copyWith({User? user, bool? isLoading, String? error}) {
     return AuthState(
       user: user ?? this.user,
       isLoading: isLoading ?? this.isLoading,
+      error: error,
     );
   }
 }
@@ -20,42 +21,26 @@ class AuthNotifier extends StateNotifier<AuthState> {
   AuthNotifier() : super(AuthState());
 
   Future<bool> login(String employeeId, String password) async {
-    state = state.copyWith(isLoading: true);
-    await Future.delayed(const Duration(seconds: 1)); // Mock delay
-    
-    UserRole? role;
-    String? name;
-    
-    if (employeeId == 'SEC001' && password == 'Security@123') {
-      role = UserRole.security;
-      name = 'Security Officer';
-    } else if (employeeId == 'EMP001' && password == 'Employee@123') {
-      role = UserRole.employee;
-      name = 'Employee';
+    if (employeeId.isEmpty || password.isEmpty) {
+      state = state.copyWith(isLoading: false, error: 'Please enter credentials');
+      return false;
     }
-    
-    if (role != null && name != null) {
-      final user = User(
-        id: employeeId,
-        name: name,
-        email: '${employeeId.toLowerCase()}@company.com',
-        role: role,
-      );
-      state = state.copyWith(user: user, isLoading: false);
-      return true;
-    }
-    
-    state = state.copyWith(isLoading: false);
-    return false;
+    state = state.copyWith(isLoading: true, error: null);
+    await Future.delayed(const Duration(milliseconds: 500));
+    final user = User(
+      id: employeeId,
+      name: 'Demo User',
+      email: '$employeeId@genmindz.in',
+      role: UserRole.employee,
+      token: 'mock-token',
+    );
+    state = state.copyWith(user: user, isLoading: false);
+    return true;
   }
 
-  void setUser(User user) {
-    state = state.copyWith(user: user);
-  }
+  void setUser(User user) => state = state.copyWith(user: user);
 
-  void logout() {
-    state = AuthState();
-  }
+  void logout() => state = AuthState();
 }
 
 final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {

@@ -2,7 +2,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../features/auth/login_screen.dart';
-import '../features/role/role_selection_screen.dart';
 import '../features/scanner/scanner_screen.dart';
 import '../features/visitors/visitors_screen.dart';
 import '../features/visitors/visitor_detail_screen.dart';
@@ -18,10 +17,6 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/',
       builder: (context, state) => const LoginScreen(),
-    ),
-    GoRoute(
-      path: '/role-selection',
-      builder: (context, state) => const RoleSelectionScreen(),
     ),
     ShellRoute(
       builder: (context, state, child) => MainNavigation(child: child),

@@ -5,11 +5,13 @@ class User {
   final String name;
   final String email;
   final UserRole role;
+  final String? token;
 
   User({
     required this.id,
     required this.name,
     required this.email,
     required this.role,
+    this.token,
   });
 }
