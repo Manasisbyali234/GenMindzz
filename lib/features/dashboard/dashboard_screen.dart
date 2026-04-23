@@ -23,6 +23,15 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   String selectedScheduleTab = 'Schedule'; // New state for Schedule/Invited tabs
   DateTime selectedAppointmentDate = DateTime.now(); // New state for selected date
 
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(() {
+      ref.read(authProvider.notifier).refreshProfile();
+      ref.read(visitorsStateProvider.notifier).loadVisitors();
+    });
+  }
+
   List<Visitor> _filterVisitorsForEmployee(List<Visitor> visitors) {
     switch (selectedFilter) {
       case 'Requests':
@@ -45,26 +54,49 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final user = ref.watch(authProvider).user;
-    final visitors = ref.watch(visitorsProvider);
+    final authState = ref.watch(authProvider);
+    final visitorsState = ref.watch(visitorsStateProvider);
+    final user = authState.user;
+    final visitors = visitorsState.visitors;
 
-    if (user?.role == UserRole.employee) {
-      return _buildEmployeeDashboard(context, visitors);
+    if (user == null) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (visitorsState.isLoading && !visitorsState.initialized) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (visitorsState.error != null && visitors.isEmpty) {
+      return _buildLoadError(context, visitorsState.error!);
+    }
+
+    if (user.role == UserRole.employee) {
+      return _buildEmployeeDashboard(context, visitors, user);
     } else {
-      return _buildSecurityDashboard(context, visitors);
+      return _buildSecurityDashboard(context, visitors, user);
     }
   }
 
-  Widget _buildEmployeeDashboard(BuildContext context, List<Visitor> visitors) {
-    final todayVisitors = visitors.where((v) => 
-      v.visitTime.day == DateTime.now().day).toList();
+  Widget _buildEmployeeDashboard(
+    BuildContext context,
+    List<Visitor> visitors,
+    User user,
+  ) {
+    final todayVisitors = visitors.where((visitor) {
+      return DateUtils.isSameDay(visitor.visitTime, DateTime.now());
+    }).toList();
 
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
       body: SafeArea(
-        child: Column(
-          children: [
-            _buildEmployeeHeader(),
+          child: Column(
+            children: [
+            _buildEmployeeHeader(user),
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.all(16),
@@ -87,7 +119,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     );
   }
 
-  Widget _buildEmployeeHeader() {
+  Widget _buildEmployeeHeader(User user) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: const BoxDecoration(
@@ -109,8 +141,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'John Smith',
+                Text(
+                  user.name,
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 18,
@@ -118,7 +150,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   ),
                 ),
                 Text(
-                  'EMPLOYEE',
+                  _formatRoleLabel(user),
                   style: TextStyle(
                     color: Colors.white.withOpacity(0.7),
                     fontSize: 12,
@@ -149,7 +181,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             ),
           ),
           IconButton(
-            onPressed: () {},
+            onPressed: () => _handleLogout(context),
             icon: const Icon(Icons.logout, color: Colors.white),
           ),
         ],
@@ -538,13 +570,17 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     );
   }
 
-  Widget _buildSecurityDashboard(BuildContext context, List<Visitor> visitors) {
+  Widget _buildSecurityDashboard(
+    BuildContext context,
+    List<Visitor> visitors,
+    User user,
+  ) {
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
       body: SafeArea(
-        child: Column(
-          children: [
-            _buildSecurityHeader(),
+          child: Column(
+            children: [
+            _buildSecurityHeader(user),
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.all(16),
@@ -567,7 +603,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     );
   }
 
-  Widget _buildSecurityHeader() {
+  Widget _buildSecurityHeader(User user) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: const BoxDecoration(
@@ -589,8 +625,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Officer Johnson',
+                Text(
+                  user.name,
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 18,
@@ -598,7 +634,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   ),
                 ),
                 Text(
-                  'SECURITY OFFICER',
+                  _formatRoleLabel(user),
                   style: TextStyle(
                     color: Colors.white.withOpacity(0.7),
                     fontSize: 12,
@@ -629,7 +665,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             ),
           ),
           IconButton(
-            onPressed: () {},
+            onPressed: () => _handleLogout(context),
             icon: const Icon(Icons.logout, color: Colors.white),
           ),
         ],
@@ -1404,11 +1440,31 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     );
   }
 
-  void _showInviteVisitorModal(BuildContext context) {
-    showModalBottomSheet(
+  Future<void> _showInviteVisitorModal(BuildContext context) async {
+    final inviteToken = await showModalBottomSheet<String>(
       context: context,
       isScrollControlled: true,
       builder: (context) => const InviteVisitorModal(),
+    );
+
+    if (!mounted || inviteToken == null || inviteToken.isEmpty) {
+      return;
+    }
+
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Invite Token'),
+          content: SelectableText(inviteToken),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text('Close'),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -1416,31 +1472,63 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     context.push('/visitor-detail/${visitor.id}', extra: visitor);
   }
 
-  void _approveVisitor(BuildContext context, Visitor visitor) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('${visitor.name} approved for entry'),
-        backgroundColor: AppColors.approved,
-      ),
-    );
+  Future<void> _approveVisitor(BuildContext context, Visitor visitor) async {
+    try {
+      await ref.read(visitorsStateProvider.notifier).approveVisitor(visitor.id);
+      if (!mounted) {
+        return;
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('${visitor.name} approved for entry'),
+          backgroundColor: AppColors.approved,
+        ),
+      );
+    } catch (error) {
+      _showActionError(context, error);
+    }
   }
 
-  void _declineVisitor(BuildContext context, Visitor visitor) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('${visitor.name} entry declined'),
-        backgroundColor: AppColors.overstay,
-      ),
-    );
+  Future<void> _declineVisitor(BuildContext context, Visitor visitor) async {
+    try {
+      await ref.read(visitorsStateProvider.notifier).rejectVisitor(visitor.id);
+      if (!mounted) {
+        return;
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('${visitor.name} entry declined'),
+          backgroundColor: AppColors.overstay,
+        ),
+      );
+    } catch (error) {
+      _showActionError(context, error);
+    }
   }
 
-  void _rescheduleVisitor(BuildContext context, Visitor visitor) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('${visitor.name} visit rescheduled'),
-        backgroundColor: AppColors.pending,
-      ),
-    );
+  Future<void> _rescheduleVisitor(BuildContext context, Visitor visitor) async {
+    try {
+      await ref.read(visitorsStateProvider.notifier).rescheduleVisitor(
+            visitId: visitor.id,
+            date: visitor.visitTime.add(const Duration(days: 1)),
+            time: TimeOfDay.fromDateTime(visitor.visitTime),
+          );
+
+      if (!mounted) {
+        return;
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('${visitor.name} moved to the next available slot'),
+          backgroundColor: AppColors.pending,
+        ),
+      );
+    } catch (error) {
+      _showActionError(context, error);
+    }
   }
 
   void _imLate(BuildContext context, Visitor visitor) {
@@ -1467,6 +1555,58 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         context.go('/visitors?filter=overstay');
         break;
     }
+  }
+
+  Widget _buildLoadError(BuildContext context, String error) {
+    return Scaffold(
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.cloud_off, size: 64, color: AppColors.textSecondary),
+              const SizedBox(height: 16),
+              Text(
+                error,
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: AppColors.textSecondary),
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: () {
+                  ref.read(visitorsStateProvider.notifier).loadVisitors(force: true);
+                },
+                child: const Text('Retry'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  String _formatRoleLabel(User user) {
+    final rawRole = user.rawRole;
+    if (rawRole != null && rawRole.isNotEmpty) {
+      return rawRole.replaceAll('_', ' ').toUpperCase();
+    }
+    return user.role == UserRole.security ? 'SECURITY' : 'EMPLOYEE';
+  }
+
+  void _handleLogout(BuildContext context) {
+    ref.read(authProvider.notifier).logout();
+    ref.read(visitorsStateProvider.notifier).clear();
+    context.go('/');
+  }
+
+  void _showActionError(BuildContext context, Object error) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(error.toString()),
+        backgroundColor: AppColors.overstay,
+      ),
+    );
   }
 
   Widget _buildSectionTitle() {

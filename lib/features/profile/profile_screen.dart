@@ -8,6 +8,16 @@ class ProfileScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final user = ref.watch(authProvider).user;
+
+    if (user == null) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    final roleLabel = (user.rawRole ?? user.role.name).replaceAll('_', ' ').toUpperCase();
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: Column(
@@ -32,11 +42,11 @@ class ProfileScreen extends ConsumerWidget {
                           child: const Icon(Icons.person, color: Colors.white, size: 20),
                         ),
                         const SizedBox(width: 12),
-                        const Column(
+                        Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Jane Doe',
+                              user.name,
                               style: TextStyle(
                                 color: Colors.white,
                                 fontSize: 16,
@@ -44,7 +54,7 @@ class ProfileScreen extends ConsumerWidget {
                               ),
                             ),
                             Text(
-                              'EMPLOYEE',
+                              roleLabel,
                               style: TextStyle(
                                 color: Color(0xFF7F8AA3),
                                 fontSize: 12,
@@ -57,12 +67,12 @@ class ProfileScreen extends ConsumerWidget {
                     ),
                     const Spacer(),
                     // Right side - Icons
-                    IconButton(
-                      onPressed: () {},
+                      IconButton(
+                      onPressed: () => context.go('/notifications'),
                       icon: const Icon(Icons.notifications_outlined, color: Colors.white),
                     ),
                     IconButton(
-                      onPressed: () {},
+                      onPressed: () => _handleSignOut(context, ref),
                       icon: const Icon(Icons.logout, color: Colors.white),
                     ),
                   ],
@@ -106,8 +116,8 @@ class ProfileScreen extends ConsumerWidget {
                       const SizedBox(height: 16),
                       
                       // Name & Role
-                      const Text(
-                        'Jane Doe',
+                      Text(
+                        user.name,
                         style: TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
@@ -115,8 +125,8 @@ class ProfileScreen extends ConsumerWidget {
                         ),
                       ),
                       const SizedBox(height: 4),
-                      const Text(
-                        'Software Engineering',
+                      Text(
+                        user.department ?? roleLabel,
                         style: TextStyle(
                           fontSize: 16,
                           color: Color(0xFF7F8AA3),
@@ -146,11 +156,11 @@ class ProfileScreen extends ConsumerWidget {
                     ),
                     child: Column(
                       children: [
-                        _buildInfoRow('Employee ID', 'EMP001'),
+                        _buildInfoRow('User ID', user.id),
                         const SizedBox(height: 20),
-                        _buildInfoRow('Access Level', 'Tier1 Security'),
+                        _buildInfoRow('Access Level', roleLabel),
                         const SizedBox(height: 20),
-                        _buildInfoRow('Status', 'Active'),
+                        _buildInfoRow('Email', user.email),
                       ],
                     ),
                   ),

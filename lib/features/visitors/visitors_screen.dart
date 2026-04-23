@@ -21,12 +21,22 @@ class _VisitorsScreenState extends ConsumerState<VisitorsScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    _searchController.addListener(() {
+      ref.read(visitorSearchProvider.notifier).state = _searchController.text;
+    });
+    Future.microtask(() {
+      ref.read(visitorsStateProvider.notifier).loadVisitors();
+    });
   }
 
   @override
   Widget build(BuildContext context) {
+    final visitorsState = ref.watch(visitorsStateProvider);
     final visitors = ref.watch(filteredVisitorsProvider);
     final selectedFilter = ref.watch(selectedFilterProvider);
+    final todayVisitors = visitors.where((visitor) {
+      return DateUtils.isSameDay(visitor.visitTime, DateTime.now());
+    }).toList();
 
     return Scaffold(
       appBar: AppBar(
@@ -67,14 +77,14 @@ class _VisitorsScreenState extends ConsumerState<VisitorsScreen>
                   topRight: Radius.circular(24),
                 ),
               ),
-              child: TabBarView(
-                controller: _tabController,
-                children: [
-                  _buildVisitorsList(visitors),
-                  _buildVisitorsList(visitors),
-                ],
-              ),
-            ),
+               child: TabBarView(
+                 controller: _tabController,
+                 children: [
+                  _buildVisitorsList(todayVisitors, visitorsState),
+                  _buildVisitorsList(visitors, visitorsState),
+                 ],
+               ),
+             ),
           ),
         ],
       ),
@@ -99,6 +109,9 @@ class _VisitorsScreenState extends ConsumerState<VisitorsScreen>
             ),
             child: TextField(
               controller: _searchController,
+              onChanged: (value) {
+                ref.read(visitorSearchProvider.notifier).state = value;
+              },
               style: const TextStyle(color: Colors.black),
               decoration: const InputDecoration(
                 hintText: 'Search visitors...',
@@ -158,7 +171,38 @@ class _VisitorsScreenState extends ConsumerState<VisitorsScreen>
     );
   }
 
-  Widget _buildVisitorsList(List<Visitor> visitors) {
+  Widget _buildVisitorsList(List<Visitor> visitors, VisitorsState visitorsState) {
+    if (visitorsState.isLoading && !visitorsState.initialized) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (visitorsState.error != null && visitors.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.cloud_off, size: 64, color: AppColors.textSecondary),
+              const SizedBox(height: 16),
+              Text(
+                visitorsState.error!,
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: AppColors.textSecondary),
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: () {
+                  ref.read(visitorsStateProvider.notifier).loadVisitors(force: true);
+                },
+                child: const Text('Retry'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     if (visitors.isEmpty) {
       return const Center(
         child: Column(

@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+
 import '../../features/auth/auth_provider.dart';
+import '../../features/dashboard/widgets/invite_visitor_modal.dart';
+import '../../features/visitors/visitors_provider.dart';
 import '../../models/user.dart';
 import '../constants/app_colors.dart';
 
@@ -21,13 +24,17 @@ class MainNavigation extends ConsumerWidget {
 
     return Scaffold(
       body: child,
-      bottomNavigationBar: _buildBottomNavigation(context, user.role),
-      floatingActionButton: _buildFloatingActionButton(context, user.role),
+      bottomNavigationBar: _buildBottomNavigation(context, user.role, ref),
+      floatingActionButton: _buildFloatingActionButton(context, user.role, ref),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
     );
   }
 
-  Widget _buildBottomNavigation(BuildContext context, UserRole role) {
+  Widget _buildBottomNavigation(
+    BuildContext context,
+    UserRole role,
+    WidgetRef ref,
+  ) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -46,11 +53,25 @@ class MainNavigation extends ConsumerWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _buildNavItem(Icons.home_outlined, 'Home', 0, context, role),
-              _buildNavItem(Icons.notifications_outlined, 'Alerts', 1, context, role),
+              _buildNavItem(Icons.home_outlined, 'Home', 0, context, role, ref),
+              _buildNavItem(Icons.notifications_outlined, 'Alerts', 1, context, role, ref),
               const SizedBox(width: 60), // Space for FAB
-              _buildNavItem(Icons.person_outline, 'Profile', role == UserRole.security ? 1 : 3, context, role),
-              _buildNavItem(Icons.logout, 'Exit', role == UserRole.security ? 1 : 4, context, role),
+              _buildNavItem(
+                Icons.person_outline,
+                'Profile',
+                role == UserRole.security ? 1 : 3,
+                context,
+                role,
+                ref,
+              ),
+              _buildNavItem(
+                Icons.logout,
+                'Exit',
+                role == UserRole.security ? 1 : 4,
+                context,
+                role,
+                ref,
+              ),
             ],
           ),
         ),
@@ -58,12 +79,19 @@ class MainNavigation extends ConsumerWidget {
     );
   }
 
-  Widget _buildNavItem(IconData icon, String label, int targetIndex, BuildContext context, UserRole role) {
+  Widget _buildNavItem(
+    IconData icon,
+    String label,
+    int targetIndex,
+    BuildContext context,
+    UserRole role,
+    WidgetRef ref,
+  ) {
     final currentIndex = _getCurrentIndex(context, role);
     final isSelected = _isNavItemSelected(label, context, role);
     
     return GestureDetector(
-      onTap: () => _onNavItemTap(label, context, role),
+      onTap: () => _onNavItemTap(label, context, role, ref),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.center,
@@ -103,7 +131,12 @@ class MainNavigation extends ConsumerWidget {
     }
   }
 
-  void _onNavItemTap(String label, BuildContext context, UserRole role) {
+  void _onNavItemTap(
+    String label,
+    BuildContext context,
+    UserRole role,
+    WidgetRef ref,
+  ) {
     switch (label) {
       case 'Home':
         if (role == UserRole.security) {
@@ -119,12 +152,18 @@ class MainNavigation extends ConsumerWidget {
         context.go('/profile');
         break;
       case 'Exit':
+        ref.read(authProvider.notifier).logout();
+        ref.read(visitorsStateProvider.notifier).clear();
         context.go('/');
         break;
     }
   }
 
-  Widget _buildFloatingActionButton(BuildContext context, UserRole role) {
+  Widget _buildFloatingActionButton(
+    BuildContext context,
+    UserRole role,
+    WidgetRef ref,
+  ) {
     return Container(
       width: 60,
       height: 60,
@@ -146,7 +185,11 @@ class MainNavigation extends ConsumerWidget {
           if (role == UserRole.security) {
             context.go('/scanner');
           } else {
-            // Open invite modal for employees
+            showModalBottomSheet<String>(
+              context: context,
+              isScrollControlled: true,
+              builder: (context) => const InviteVisitorModal(),
+            );
           }
         },
         backgroundColor: Colors.transparent,

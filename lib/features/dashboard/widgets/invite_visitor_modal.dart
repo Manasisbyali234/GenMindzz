@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../../core/constants/app_colors.dart';
+import '../../visitors/visitors_provider.dart';
 
 
-class InviteVisitorModal extends StatefulWidget {
+class InviteVisitorModal extends ConsumerStatefulWidget {
   const InviteVisitorModal({super.key});
 
   @override
-  State<InviteVisitorModal> createState() => _InviteVisitorModalState();
+  ConsumerState<InviteVisitorModal> createState() => _InviteVisitorModalState();
 }
 
-class _InviteVisitorModalState extends State<InviteVisitorModal> {
+class _InviteVisitorModalState extends ConsumerState<InviteVisitorModal> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
@@ -17,6 +20,7 @@ class _InviteVisitorModalState extends State<InviteVisitorModal> {
   final _purposeController = TextEditingController();
   DateTime? _selectedDate;
   TimeOfDay? _selectedTime;
+  bool _isSubmitting = false;
 
   @override
   Widget build(BuildContext context) {
@@ -378,8 +382,8 @@ class _InviteVisitorModalState extends State<InviteVisitorModal> {
       children: [
         SizedBox(
           width: double.infinity,
-          child: ElevatedButton(
-            onPressed: _sendInvitation,
+            child: ElevatedButton(
+            onPressed: _isSubmitting ? null : _sendInvitation,
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
               padding: const EdgeInsets.symmetric(vertical: 16),
@@ -387,14 +391,23 @@ class _InviteVisitorModalState extends State<InviteVisitorModal> {
                 borderRadius: BorderRadius.circular(12),
               ),
             ),
-            child: const Text(
-              'Generate Link',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: AppColors.textLight,
-              ),
-            ),
+            child: _isSubmitting
+                ? const SizedBox(
+                    height: 20,
+                    width: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: AppColors.textLight,
+                    ),
+                  )
+                : const Text(
+                    'Generate Link',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textLight,
+                    ),
+                  ),
           ),
         ),
         const SizedBox(height: 12),
@@ -445,7 +458,7 @@ class _InviteVisitorModalState extends State<InviteVisitorModal> {
     }
   }
 
-  void _sendInvitation() {
+  Future<void> _sendInvitation() async {
     if (_formKey.currentState?.validate() ?? false) {
       if (_selectedDate == null || _selectedTime == null) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -453,12 +466,38 @@ class _InviteVisitorModalState extends State<InviteVisitorModal> {
         );
         return;
       }
-      
-      // Mock invitation sent
-      Navigator.pop(context);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Invitation sent successfully!')),
-      );
+
+      setState(() => _isSubmitting = true);
+
+      try {
+        final inviteToken =
+            await ref.read(visitorsStateProvider.notifier).createInvitation(
+                  visitorName: _nameController.text.trim(),
+                  email: _emailController.text.trim(),
+                  phone: _phoneController.text.trim(),
+                  purpose: _purposeController.text.trim(),
+                  date: _selectedDate!,
+                  time: _selectedTime!,
+                );
+
+        if (!mounted) {
+          return;
+        }
+
+        Navigator.pop(context, inviteToken);
+      } catch (error) {
+        if (!mounted) {
+          return;
+        }
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(error.toString())),
+        );
+      } finally {
+        if (mounted) {
+          setState(() => _isSubmitting = false);
+        }
+      }
     }
   }
 
