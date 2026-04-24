@@ -1,0 +1,17 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Flutter Web Server 62225",
+      "request": "launch",
+      "type": "dart",
+      "deviceId": "web-server",
+      "toolArgs": [
+        "--web-hostname",
+        "localhost",
+        "--web-port",
+        "62225"
+      ]
+    }
+  ]
+}
