@@ -53,11 +53,20 @@ class ApiService {
     'API_BASE_URL',
     defaultValue: 'https://api.genmindz.in',
   );
+  static const String _webProxyBaseUrl = String.fromEnvironment(
+    'WEB_DEV_PROXY_BASE_URL',
+    defaultValue: '',
+  );
 
   static String get baseUrl {
-    final trimmed = _configuredBaseUrl.endsWith('/')
-        ? _configuredBaseUrl.substring(0, _configuredBaseUrl.length - 1)
-        : _configuredBaseUrl;
+    final source = _configuredBaseUrl.trim().isNotEmpty
+        ? _configuredBaseUrl.trim()
+        : _webProxyBaseUrl.trim().isNotEmpty
+            ? _webProxyBaseUrl.trim()
+            : 'https://api.genmindz.in';
+    final trimmed = source.endsWith('/')
+        ? source.substring(0, source.length - 1)
+        : source;
     return trimmed.endsWith('/api') ? trimmed : '$trimmed/api';
   }
 

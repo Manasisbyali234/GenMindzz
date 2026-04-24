@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/services/api_service.dart';
+import '../../models/user.dart';
 import '../../models/visitor.dart';
 import '../auth/auth_provider.dart';
 
