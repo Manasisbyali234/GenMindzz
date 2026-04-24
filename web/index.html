@@ -33,6 +33,72 @@
   <link rel="manifest" href="manifest.json">
 </head>
 <body>
+  <script
+    src="https://www.google.com/recaptcha/api.js?render=explicit"
+    async
+    defer
+  ></script>
+  <script>
+    window.__genmindzRecaptchaWidgets = {};
+    window.__genmindzRecaptcha = {
+      render: function (
+        containerId,
+        siteKey,
+        tokenCallbackName,
+        expiredCallbackName,
+        errorCallbackName
+      ) {
+        if (!window.grecaptcha || !siteKey) {
+          return null;
+        }
+
+        const container = document.getElementById(containerId);
+        if (!container) {
+          return null;
+        }
+
+        const existingWidgetId = window.__genmindzRecaptchaWidgets[containerId];
+        if (existingWidgetId !== undefined && existingWidgetId !== null) {
+          return existingWidgetId;
+        }
+
+        const widgetId = window.grecaptcha.render(container, {
+          sitekey: siteKey,
+          callback: function (token) {
+            const callback = window[tokenCallbackName];
+            if (typeof callback === "function") {
+              callback(token);
+            }
+          },
+          "expired-callback": function () {
+            const callback = window[expiredCallbackName];
+            if (typeof callback === "function") {
+              callback();
+            }
+          },
+          "error-callback": function () {
+            const callback = window[errorCallbackName];
+            if (typeof callback === "function") {
+              callback();
+            }
+          },
+        });
+
+        window.__genmindzRecaptchaWidgets[containerId] = widgetId;
+        return widgetId;
+      },
+      reset: function (containerId) {
+        if (!window.grecaptcha) {
+          return;
+        }
+
+        const widgetId = window.__genmindzRecaptchaWidgets[containerId];
+        if (widgetId !== undefined && widgetId !== null) {
+          window.grecaptcha.reset(widgetId);
+        }
+      },
+    };
+  </script>
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>
