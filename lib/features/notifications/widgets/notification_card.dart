@@ -138,15 +138,30 @@ class NotificationCard extends StatelessWidget {
 
   Widget _buildTimeAgo() {
     final now = DateTime.now();
-    final difference = now.difference(notification.timestamp);
+    final difference = notification.timestamp.difference(now);
     
     String timeAgo;
-    if (difference.inMinutes < 60) {
-      timeAgo = '${difference.inMinutes}m ago';
-    } else if (difference.inHours < 24) {
-      timeAgo = '${difference.inHours}h ago';
+    if (!difference.isNegative) {
+      if (difference.inMinutes < 60) {
+        timeAgo = 'in ${difference.inMinutes}m';
+      } else if (difference.inHours < 24) {
+        timeAgo = 'in ${difference.inHours}h';
+      } else {
+        timeAgo = 'in ${difference.inDays}d';
+      }
     } else {
-      timeAgo = '${difference.inDays}d ago';
+      final elapsed = difference.abs();
+      if (elapsed.inMinutes < 60) {
+        timeAgo = '${elapsed.inMinutes}m ago';
+      } else if (elapsed.inHours < 24) {
+        timeAgo = '${elapsed.inHours}h ago';
+      } else {
+        timeAgo = '${elapsed.inDays}d ago';
+      }
+    }
+
+    if (timeAgo == 'in 0m') {
+      timeAgo = 'now';
     }
 
     return Text(

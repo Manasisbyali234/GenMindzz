@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../core/constants/app_colors.dart';
+import '../visitors/visitors_provider.dart';
 import '../../models/notification.dart';
 import 'notifications_provider.dart';
 import 'widgets/notification_card.dart';
@@ -20,11 +22,21 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 4, vsync: this);
+    Future.microtask(() {
+      ref.read(visitorsStateProvider.notifier).loadVisitors();
+    });
   }
 
   @override
   Widget build(BuildContext context) {
+    final visitorsState = ref.watch(visitorsStateProvider);
     final notifications = ref.watch(filteredNotificationsProvider);
+
+    if (visitorsState.isLoading && !visitorsState.initialized) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -68,6 +80,28 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
   }
 
   Widget _buildNotificationsList(List<AppNotification> notifications) {
+    final visitorsState = ref.watch(visitorsStateProvider);
+
+    if (visitorsState.error != null && notifications.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.error_outline, size: 48, color: AppColors.overstay),
+              const SizedBox(height: 12),
+              Text(
+                visitorsState.error!,
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: Colors.black54),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     if (notifications.isEmpty) {
       return const Center(
         child: Column(

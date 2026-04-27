@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../auth/auth_provider.dart';
 import '../../models/user.dart';
-import '../../mock_data/mock_data.dart';
 import '../../core/constants/app_colors.dart';
 
 class RoleSelectionScreen extends ConsumerStatefulWidget {
@@ -185,18 +184,31 @@ class _RoleSelectionScreenState extends ConsumerState<RoleSelectionScreen> {
   }
 
   void _handleContinue() {
-    if (selectedRole != null) {
-      final user = selectedRole == UserRole.security
-          ? MockData.securityUser
-          : MockData.employeeUser;
-      
-      ref.read(authProvider.notifier).setUser(user);
-      
-      if (selectedRole == UserRole.security) {
-        context.go('/scanner');
-      } else {
-        context.go('/dashboard');
-      }
+    final user = ref.read(authProvider).user;
+
+    if (selectedRole == null) {
+      return;
+    }
+
+    if (user == null) {
+      context.go('/');
+      return;
+    }
+
+    if (user.role != selectedRole) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('This account does not have access to the selected portal.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    if (user.role == UserRole.security) {
+      context.go('/scanner');
+    } else {
+      context.go('/dashboard');
     }
   }
 }

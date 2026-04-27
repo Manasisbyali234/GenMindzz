@@ -32,6 +32,45 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     });
   }
 
+  List<Visitor> _scopeVisitorsForEmployee(List<Visitor> visitors, User user) {
+    final normalizedUserId = user.id.trim().toLowerCase();
+    final normalizedUserName = user.name.trim().toLowerCase();
+    final ownedVisitors = visitors.where((visitor) {
+      final hostId = visitor.hostId?.trim().toLowerCase();
+      if (normalizedUserId.isNotEmpty && hostId != null && hostId.isNotEmpty) {
+        return hostId == normalizedUserId;
+      }
+
+      return visitor.host.trim().toLowerCase() == normalizedUserName;
+    }).toList();
+
+    return ownedVisitors.isNotEmpty ? ownedVisitors : visitors;
+  }
+
+  List<Visitor> _visitorsForDate(List<Visitor> visitors, DateTime date) {
+    final filtered = visitors
+        .where((visitor) => DateUtils.isSameDay(visitor.visitTime, date))
+        .toList()
+      ..sort((first, second) => first.visitTime.compareTo(second.visitTime));
+
+    return filtered;
+  }
+
+  List<Visitor> _buildEmployeeScheduleVisitors(List<Visitor> visitors) {
+    final visitorsForDate = _visitorsForDate(visitors, selectedAppointmentDate);
+    final filtered = visitorsForDate.where((visitor) {
+      if (selectedScheduleTab == 'Invited') {
+        return visitor.status == VisitorStatus.invited;
+      }
+
+      return visitor.status != VisitorStatus.invited &&
+          visitor.status != VisitorStatus.blocked;
+    }).toList()
+      ..sort((first, second) => first.visitTime.compareTo(second.visitTime));
+
+    return filtered;
+  }
+
   List<Visitor> _filterVisitorsForEmployee(List<Visitor> visitors) {
     switch (selectedFilter) {
       case 'Requests':
@@ -87,9 +126,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     List<Visitor> visitors,
     User user,
   ) {
-    final todayVisitors = visitors.where((visitor) {
-      return DateUtils.isSameDay(visitor.visitTime, DateTime.now());
-    }).toList();
+    final employeeVisitors = _scopeVisitorsForEmployee(visitors, user);
+    final todayVisitors = _visitorsForDate(employeeVisitors, DateTime.now());
+    final scheduledVisitors = _buildEmployeeScheduleVisitors(employeeVisitors);
 
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
@@ -107,8 +146,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     _buildTabNavigation(),
                     const SizedBox(height: 20),
                     if (selectedTab == 'Visitor Requests') ..._buildMyVisitorsContent(todayVisitors),
-                    if (selectedTab == 'Schedule') ..._buildScheduleContent(todayVisitors),
-                    if (selectedTab == 'Insights') ..._buildInsightsContent(),
+                    if (selectedTab == 'Schedule') ..._buildScheduleContent(scheduledVisitors),
+                    if (selectedTab == 'Insights') ..._buildInsightsContent(employeeVisitors),
                   ],
                 ),
               ),
@@ -1702,19 +1741,19 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     ];
   }
 
-  List<Widget> _buildInsightsContent() {
+  List<Widget> _buildInsightsContent(List<Visitor> visitors) {
     return [
-      _buildInsightStatsGrid(),
+      _buildInsightStatsGrid(visitors),
       const SizedBox(height: 20),
-      _buildWeeklyTrafficCard(),
+      _buildWeeklyTrafficCard(visitors),
       const SizedBox(height: 20),
-      _buildKPISummaryCards(),
+      _buildKPISummaryCards(visitors),
       const SizedBox(height: 20),
-      _buildAlertBanner(),
+      _buildAlertBanner(visitors),
     ];
   }
 
-  Widget _buildWeeklyTrafficCard() {
+  Widget _buildWeeklyTrafficCard(List<Visitor> visitors) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
@@ -1751,13 +1790,18 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             ],
           ),
           const SizedBox(height: 24),
-          _buildWeeklyChart(),
+          _buildWeeklyChart(visitors),
         ],
       ),
     );
   }
 
-  Widget _buildInsightStatsGrid() {
+  Widget _buildInsightStatsGrid(List<Visitor> visitors) {
+    final todayCount = _visitorsForDate(visitors, DateTime.now()).length;
+    final pendingCount = _countVisitorsByStatus(visitors, VisitorStatus.pending);
+    final invitedCount = _countVisitorsByStatus(visitors, VisitorStatus.invited);
+    final checkedInCount = _countVisitorsByStatus(visitors, VisitorStatus.checkedIn);
+
     return GridView.count(
       crossAxisCount: 2,
       shrinkWrap: true,
@@ -1766,10 +1810,30 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       mainAxisSpacing: 12,
       childAspectRatio: 1.5,
       children: [
-        _buildInsightStatCard('Peak Hours', '10-11 AM', Icons.schedule, Colors.orange),
-        _buildInsightStatCard('Avg Visit', '45 min', Icons.timer, Colors.blue),
-        _buildInsightStatCard('Capacity', '85%', Icons.people, Colors.red),
-        _buildInsightStatCard('Efficiency', '92%', Icons.trending_up, Colors.green),
+        _buildInsightStatCard(
+          'Today',
+          todayCount.toString(),
+          Icons.today_outlined,
+          Colors.blue,
+        ),
+        _buildInsightStatCard(
+          'Pending',
+          pendingCount.toString(),
+          Icons.pending_actions_outlined,
+          Colors.orange,
+        ),
+        _buildInsightStatCard(
+          'Invited',
+          invitedCount.toString(),
+          Icons.mail_outline,
+          const Color(0xFF6366F1),
+        ),
+        _buildInsightStatCard(
+          'Checked In',
+          checkedInCount.toString(),
+          Icons.login_outlined,
+          Colors.green,
+        ),
       ],
     );
   }
@@ -1826,11 +1890,23 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     );
   }
 
-  Widget _buildWeeklyChart() {
-    final days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
-    final values = [8, 12, 15, 10, 6];
-    final maxValue = values.reduce((a, b) => a > b ? a : b);
-    final todayIndex = 2; // Wednesday is active
+  Widget _buildWeeklyChart(List<Visitor> visitors) {
+    final today = DateTime.now();
+    final days = List.generate(5, (index) {
+      return DateTime(
+        today.year,
+        today.month,
+        today.day,
+      ).subtract(Duration(days: 4 - index));
+    });
+    final values = days
+        .map((date) => _visitorsForDate(visitors, date).length)
+        .toList();
+    final maxValue = values.fold<int>(0, (currentMax, value) {
+      return value > currentMax ? value : currentMax;
+    });
+    final safeMaxValue = maxValue == 0 ? 1 : maxValue;
+    final todayIndex = days.length - 1;
 
     return Column(
       children: [
@@ -1841,7 +1917,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             final index = entry.key;
             final value = entry.value;
             final isToday = index == todayIndex;
-            final height = (value / maxValue) * 80;
+            final height = value == 0 ? 8.0 : (value / safeMaxValue) * 80;
             
             return Column(
               children: [
@@ -1855,7 +1931,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  days[index],
+                  _weekdayLabel(days[index]),
                   style: TextStyle(
                     fontSize: 12,
                     color: isToday ? Colors.blue : Colors.grey.shade600,
@@ -1870,24 +1946,37 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     );
   }
 
-  Widget _buildKPISummaryCards() {
+  Widget _buildKPISummaryCards(List<Visitor> visitors) {
+    final totalVisits = visitors.length;
+    final scheduledToday = _visitorsForDate(visitors, DateTime.now()).length;
+    final arrivedVisits =
+        _countVisitorsByStatus(visitors, VisitorStatus.checkedIn) +
+        _countVisitorsByStatus(visitors, VisitorStatus.checkedOut);
+    final arrivalRate = totalVisits == 0
+        ? 0
+        : ((arrivedVisits / totalVisits) * 100).round();
+
     return Row(
       children: [
         Expanded(
           child: _buildKPICard(
             'TOTAL VISITS',
-            '24',
-            '+12% vs LY',
-            Colors.green,
+            totalVisits.toString(),
+            totalVisits == 0
+                ? 'No visit data yet'
+                : '$scheduledToday scheduled today',
+            totalVisits == 0 ? Colors.grey : Colors.green,
           ),
         ),
         const SizedBox(width: 12),
         Expanded(
           child: _buildKPICard(
-            'AVG DURATION',
-            '45m',
-            'Optimal',
-            Colors.blue,
+            'ARRIVAL RATE',
+            '$arrivalRate%',
+            totalVisits == 0
+                ? 'No arrivals recorded'
+                : '$arrivedVisits of $totalVisits visitors arrived',
+            arrivalRate >= 50 ? Colors.blue : Colors.orange,
           ),
         ),
       ],
@@ -1943,30 +2032,59 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     );
   }
 
-  Widget _buildAlertBanner() {
+  Widget _buildAlertBanner(List<Visitor> visitors) {
+    final todayVisitors = _visitorsForDate(visitors, DateTime.now());
+    final pendingToday = _countVisitorsByStatus(
+      todayVisitors,
+      VisitorStatus.pending,
+    );
+    final invitedToday = _countVisitorsByStatus(
+      todayVisitors,
+      VisitorStatus.invited,
+    );
+    final checkedInToday = _countVisitorsByStatus(
+      todayVisitors,
+      VisitorStatus.checkedIn,
+    );
+
+    final bannerColor = pendingToday > 0
+        ? AppColors.pending
+        : checkedInToday > 0
+            ? AppColors.checkedIn
+            : invitedToday > 0
+                ? AppColors.primary
+                : Colors.blueGrey;
+    final message = pendingToday > 0
+        ? '$pendingToday visitor request${pendingToday == 1 ? '' : 's'} need approval today.'
+        : checkedInToday > 0
+            ? '$checkedInToday visitor${checkedInToday == 1 ? '' : 's'} already checked in today.'
+            : invitedToday > 0
+                ? '$invitedToday invited visit${invitedToday == 1 ? '' : 's'} scheduled for today.'
+                : 'No active visitor alerts for today.';
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.blue.withOpacity(0.1),
+        color: bannerColor.withOpacity(0.1),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: Colors.blue.withOpacity(0.2),
+          color: bannerColor.withOpacity(0.2),
         ),
       ),
       child: Row(
         children: [
           Icon(
             Icons.info_outline,
-            color: Colors.blue.shade600,
+            color: bannerColor,
             size: 20,
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              'Parking capacity at 85%. Consider scheduling meetings in Building B.',
+              message,
               style: TextStyle(
-                color: Colors.blue.shade700,
+                color: bannerColor,
                 fontSize: 13,
                 fontWeight: FontWeight.w500,
               ),
@@ -1975,6 +2093,59 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         ],
       ),
     );
+  }
+
+  int _countVisitorsByStatus(List<Visitor> visitors, VisitorStatus status) {
+    return visitors.where((visitor) => visitor.status == status).length;
+  }
+
+  String _weekdayLabel(DateTime date) {
+    const labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    return labels[date.weekday - 1];
+  }
+
+  String _timelineDateLabel(DateTime date) {
+    const months = [
+      'JAN',
+      'FEB',
+      'MAR',
+      'APR',
+      'MAY',
+      'JUN',
+      'JUL',
+      'AUG',
+      'SEP',
+      'OCT',
+      'NOV',
+      'DEC',
+    ];
+    return '${_weekdayLabel(date).toUpperCase()}, ${months[date.month - 1]} ${date.day}';
+  }
+
+  String _formatClockTime(DateTime dateTime) {
+    final hour = dateTime.hour % 12 == 0 ? 12 : dateTime.hour % 12;
+    final minute = dateTime.minute.toString().padLeft(2, '0');
+    return '$hour:$minute';
+  }
+
+  String _formatMeridiem(DateTime dateTime) {
+    return dateTime.hour >= 12 ? 'PM' : 'AM';
+  }
+
+  Color _statusColor(VisitorStatus status) {
+    switch (status) {
+      case VisitorStatus.pending:
+        return AppColors.pending;
+      case VisitorStatus.approved:
+      case VisitorStatus.invited:
+        return AppColors.primary;
+      case VisitorStatus.checkedIn:
+      case VisitorStatus.checkedOut:
+        return AppColors.checkedIn;
+      case VisitorStatus.overstay:
+      case VisitorStatus.blocked:
+        return AppColors.overstay;
+    }
   }
 
   Widget _buildScheduleTabNavigation() {
@@ -2090,12 +2261,29 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       );
     }
 
+    final groupedVisitors = <DateTime, List<Visitor>>{};
+    for (final visitor in visitors) {
+      final dateKey = DateTime(
+        visitor.visitTime.year,
+        visitor.visitTime.month,
+        visitor.visitTime.day,
+      );
+      groupedVisitors.putIfAbsent(dateKey, () => []).add(visitor);
+    }
+
+    final entries = groupedVisitors.entries.toList()
+      ..sort((first, second) => first.key.compareTo(second.key));
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildDateGroup('TUE, MAY 20', visitors.take(2).toList()),
-        const SizedBox(height: 20),
-        _buildDateGroup('WED, JAN 1', visitors.skip(2).take(2).toList()),
+        for (var index = 0; index < entries.length; index++) ...[
+          _buildDateGroup(
+            _timelineDateLabel(entries[index].key),
+            entries[index].value,
+          ),
+          if (index < entries.length - 1) const SizedBox(height: 20),
+        ],
       ],
     );
   }
@@ -2120,7 +2308,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   }
 
   Widget _buildAppointmentCard(Visitor visitor) {
-    final isCompleted = visitor.status == VisitorStatus.checkedIn;
+    final statusColor = _statusColor(visitor.status);
     return GestureDetector(
       onTap: () => context.push('/visitor-detail/${visitor.id}', extra: visitor),
       child: Container(
@@ -2142,8 +2330,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  '2:30',
+                Text(
+                  _formatClockTime(visitor.visitTime),
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -2151,7 +2339,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   ),
                 ),
                 Text(
-                  'PM',
+                  _formatMeridiem(visitor.visitTime),
                   style: TextStyle(
                     fontSize: 12,
                     color: Colors.grey.shade600,
@@ -2186,15 +2374,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: isCompleted 
-                    ? Colors.grey.withOpacity(0.1)
-                    : Colors.green.withOpacity(0.1),
+                color: statusColor.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Text(
-                isCompleted ? 'Completed Meeting' : 'Upcoming Meeting',
+                visitor.status.label,
                 style: TextStyle(
-                  color: isCompleted ? Colors.grey.shade700 : Colors.green.shade700,
+                  color: statusColor,
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
                 ),
